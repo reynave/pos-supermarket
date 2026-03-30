@@ -2,6 +2,8 @@
 
 > **On-premise retail POS** application for supermarket/retail stores — built with **Node.js**, **Angular**, **MySQL**, and **Socket.IO**. Designed to run on physical POS terminal hardware with barcode scanners, thermal printers, cash drawers, and EDC payment machines.
 
+### angular devlopment url github
+https://github.com/reynave/pos-supermarket-web
 ---
 
 ## Table of Contents
