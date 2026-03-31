@@ -14,39 +14,7 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Dumping structure for table pos2.auto_number
-CREATE TABLE IF NOT EXISTS `auto_number` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(50) DEFAULT NULL,
-  `prefix` varchar(50) DEFAULT NULL,
-  `digit` int(11) NOT NULL DEFAULT 6,
-  `runningNumber` int(11) NOT NULL DEFAULT 0,
-  `updateDate` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=305 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Dumping data for table pos2.auto_number: ~18 rows (approximately)
-INSERT INTO `auto_number` (`id`, `name`, `prefix`, `digit`, `runningNumber`, `updateDate`) VALUES
-	(1, 'brand', 'BND', 4, 26, 1657258458),
-	(2, 'terminal', 'T', 4, 19, 1668759062),
-	(3, 'taxCode', 'TAX', 4, 9, 1657280513),
-	(4, 'branched', 'BN', 4, 9, 1657267586),
-	(5, 'outlet', 'OD', 4, 36, 1657790756),
-	(6, 'idPayment', 'ID', 4, 10, 1681281223),
-	(7, 'uom', 'UOM', 4, 11, 1657281222),
-	(10, 'item', 'TM', 9, 3, 1657781787),
-	(11, 'user', 'S', 6, 1, 1657258458),
-	(100, 'promotion', 'PR', 6, 11, 1658813889),
-	(200, 'transaction', '', 4, 130, 1753686997),
-	(201, 'kiosk', NULL, 9, 48869, 1701431691),
-	(220, 'reset', 'RST', 6, 248, 1691133733),
-	(300, 'kioskUuid', 'BILL', 9, 11902, 1692178227),
-	(301, 'settlement', 'SET', 6, 39, 1753687185),
-	(302, 'pos', NULL, 4, 234, 1753688959),
-	(303, 'refund', 'REF', 6, 49, 1701431691),
-	(304, 'exchange', 'EXC', 6, 34, 1697626014);
-
--- Dumping structure for table pos2.account
+-- Dumping structure for table pos_supermarket.account
 CREATE TABLE IF NOT EXISTS `account` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` longtext DEFAULT NULL,
@@ -56,7 +24,7 @@ CREATE TABLE IF NOT EXISTS `account` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1105 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.account: ~32 rows (approximately)
+-- Dumping data for table pos_supermarket.account: ~32 rows (approximately)
 INSERT INTO `account` (`id`, `name`, `value`, `updateDate`, `updateBy`) VALUES
 	(1, 'companyId', '01', 1654258394, 1),
 	(2, 'keyLisence', 'Update 2022-11-07 10:32:55', 1667813575, 1),
@@ -91,7 +59,88 @@ INSERT INTO `account` (`id`, `name`, `value`, `updateDate`, `updateBy`) VALUES
 	(1101, 'tnc1', 'Saya bersedia dalam penggunaan system akan memasukan data  dengan benar & tepat', 1742287640, NULL),
 	(1102, 'tnc2', 'Saya bersedia jika ada kekurangan tepatan untuk menerima pihak toko melakukan penyesuaian', 1742287640, NULL);
 
--- Dumping structure for table pos2.greeting
+-- Dumping structure for table pos_supermarket.auto_number
+CREATE TABLE IF NOT EXISTS `auto_number` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) DEFAULT NULL,
+  `prefix` varchar(50) DEFAULT NULL,
+  `digit` int(11) NOT NULL DEFAULT 6,
+  `runningNumber` int(11) NOT NULL DEFAULT 0,
+  `updateDate` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=305 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table pos_supermarket.auto_number: ~18 rows (approximately)
+INSERT INTO `auto_number` (`id`, `name`, `prefix`, `digit`, `runningNumber`, `updateDate`) VALUES
+	(1, 'brand', 'BND', 4, 26, 1657258458),
+	(2, 'terminal', 'T', 4, 19, 1668759062),
+	(3, 'taxCode', 'TAX', 4, 9, 1657280513),
+	(4, 'branched', 'BN', 4, 9, 1657267586),
+	(5, 'outlet', 'OD', 4, 36, 1657790756),
+	(6, 'idPayment', 'ID', 4, 10, 1681281223),
+	(7, 'uom', 'UOM', 4, 11, 1657281222),
+	(10, 'item', 'TM', 9, 3, 1657781787),
+	(11, 'user', 'S', 6, 1, 1657258458),
+	(100, 'promotion', 'PR', 6, 11, 1658813889),
+	(200, 'transaction', '', 4, 130, 1753686997),
+	(201, 'kiosk', NULL, 9, 48869, 1701431691),
+	(220, 'reset', 'RST', 6, 248, 1691133733),
+	(300, 'kioskUuid', 'BILL', 9, 11902, 1692178227),
+	(301, 'settlement', 'SET', 6, 39, 1753687185),
+	(302, 'pos', NULL, 4, 243, 1774949848),
+	(303, 'refund', 'REF', 6, 49, 1701431691),
+	(304, 'exchange', 'EXC', 6, 34, 1697626014);
+
+-- Dumping structure for table pos_supermarket.balance
+CREATE TABLE IF NOT EXISTS `balance` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cashIn` int(11) NOT NULL DEFAULT 0,
+  `cashOut` int(11) NOT NULL DEFAULT 0,
+  `transactionId` varchar(50) NOT NULL DEFAULT '',
+  `kioskUuid` varchar(50) NOT NULL DEFAULT '',
+  `cashierId` varchar(50) NOT NULL,
+  `terminalId` varchar(50) NOT NULL,
+  `settlementId` varchar(50) NOT NULL,
+  `close` int(1) NOT NULL DEFAULT 0,
+  `input_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table pos_supermarket.balance: ~14 rows (approximately)
+INSERT INTO `balance` (`id`, `cashIn`, `cashOut`, `transactionId`, `kioskUuid`, `cashierId`, `terminalId`, `settlementId`, `close`, `input_date`) VALUES
+	(1, 50, 0, '_S1', '', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-15 17:51:19'),
+	(2, 200000, -42500, '123123.0121', 'UATx1.240115.0217', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-15 18:00:16'),
+	(3, 8500, 0, '123123.0123', 'UATx1.240118.0219', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-22 18:14:38'),
+	(4, 200000, -15320, '123123.0123', 'UATx1.240118.0219', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-22 19:06:49'),
+	(5, 400000, -100000, '123123.0124', 'T01.250312.0221', '123123', 'T01', 'T01SET000039', 1, '2025-03-12 14:49:16'),
+	(6, 500000, -18000, '123123.0125', 'T01.250312.0223', '123123', 'T01', 'T01SET000039', 1, '2025-03-13 16:05:24'),
+	(7, 1400000, -79506, '123123.0126', 'T01.250312.0222', '123123', 'T01', 'T01SET000039', 1, '2025-03-18 13:54:15'),
+	(8, 200000, -11000, '123123.0127', 'T01.250318.0226', '123123', 'T01', 'T01SET000039', 1, '2025-03-18 15:51:19'),
+	(9, 400000, -75000, '123123.0128', 'T01.250319.0228', '123123', 'T01', 'T01SET000039', 1, '2025-03-19 15:34:43'),
+	(10, 2900000, -138000, '123123.0129', 'T01.250728.0230', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 13:56:53'),
+	(11, 200000, 0, '123123.0130', 'T01.250728.0231', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 14:15:57'),
+	(12, 130000, 0, '123123.0130', 'T01.250728.0231', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 14:16:18'),
+	(13, 2100000, -106000, '123123.0130', 'T01.250728.0231', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 14:16:35'),
+	(14, 100000, 0, '_S1', '', '123123', 'T01', '', 0, '2025-07-28 14:21:17');
+
+-- Dumping structure for table pos_supermarket.exchange
+CREATE TABLE IF NOT EXISTS `exchange` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kioskUuid` varchar(50) NOT NULL DEFAULT '',
+  `exchange` varchar(50) NOT NULL DEFAULT '',
+  `transactionId` varchar(50) NOT NULL DEFAULT '',
+  `transactionDetailId` varchar(50) NOT NULL DEFAULT '',
+  `itemId` varchar(50) NOT NULL DEFAULT '',
+  `refundAmount` int(9) NOT NULL DEFAULT 0,
+  `exchangeItemId` varchar(50) NOT NULL DEFAULT '',
+  `exchangeAmount` int(9) NOT NULL DEFAULT 0,
+  `input_date` datetime NOT NULL DEFAULT '2024-01-01 00:00:00',
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table pos_supermarket.exchange: ~0 rows (approximately)
+
+-- Dumping structure for table pos_supermarket.greeting
 CREATE TABLE IF NOT EXISTS `greeting` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `message` varchar(250) DEFAULT NULL,
@@ -105,9 +154,9 @@ CREATE TABLE IF NOT EXISTS `greeting` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.greeting: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.greeting: ~0 rows (approximately)
 
--- Dumping structure for table pos2.item
+-- Dumping structure for table pos_supermarket.item
 CREATE TABLE IF NOT EXISTS `item` (
   `id` varchar(50) NOT NULL,
   `description` varchar(250) DEFAULT NULL,
@@ -138,7 +187,7 @@ CREATE TABLE IF NOT EXISTS `item` (
   KEY `idx_description` (`description`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.item: ~157 rows (approximately)
+-- Dumping data for table pos_supermarket.item: ~157 rows (approximately)
 INSERT INTO `item` (`id`, `description`, `shortDesc`, `priceFlag`, `ppnFlag`, `price1`, `price2`, `price3`, `price4`, `price5`, `price6`, `price7`, `price8`, `price9`, `price10`, `itemUomId`, `itemCategoryId`, `itemTaxId`, `images`, `presence`, `status`, `inputBy`, `inputDate`, `updateBy`, `updateDate`) VALUES
 	('1', 'Kaos Kuning XL', 'Kaos Kuning XL', NULL, NULL, 100000, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL),
 	('10197201', 'ACE Hardware Lamp', 'ACE Hardware Lamp', NULL, NULL, 120000, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL),
@@ -298,7 +347,7 @@ INSERT INTO `item` (`id`, `description`, `shortDesc`, `priceFlag`, `ppnFlag`, `p
 	('9900000099', 'Puma Socks M', 'Puma Socks M', NULL, NULL, 488824, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL),
 	('9900000100', 'Puma Gloves M', 'Puma Gloves M', NULL, NULL, 97488, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 1, 1, NULL, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.item_barcode
+-- Dumping structure for table pos_supermarket.item_barcode
 CREATE TABLE IF NOT EXISTS `item_barcode` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `itemId` varchar(50) DEFAULT NULL,
@@ -312,7 +361,7 @@ CREATE TABLE IF NOT EXISTS `item_barcode` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=18446744073709551615 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.item_barcode: ~157 rows (approximately)
+-- Dumping data for table pos_supermarket.item_barcode: ~157 rows (approximately)
 INSERT INTO `item_barcode` (`id`, `itemId`, `barcode`, `status`, `presence`, `inputBy`, `inputDate`, `updateBy`, `updateDate`) VALUES
 	(1, '1', '8999999596972', 1, 1, NULL, NULL, NULL, NULL),
 	(2, '1571384', '1571384', 1, 1, NULL, NULL, NULL, NULL),
@@ -472,7 +521,7 @@ INSERT INTO `item_barcode` (`id`, `itemId`, `barcode`, `status`, `presence`, `in
 	(2198, '9900000099', '9900000099', 1, 1, NULL, NULL, NULL, NULL),
 	(2199, '9900000100', '9900000100', 1, 1, NULL, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.item_category
+-- Dumping structure for table pos_supermarket.item_category
 CREATE TABLE IF NOT EXISTS `item_category` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `id_parent` int(11) NOT NULL DEFAULT 0,
@@ -486,7 +535,7 @@ CREATE TABLE IF NOT EXISTS `item_category` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.item_category: ~46 rows (approximately)
+-- Dumping data for table pos_supermarket.item_category: ~46 rows (approximately)
 INSERT INTO `item_category` (`id`, `id_parent`, `name`, `status`, `presence`, `inputBy`, `inputDate`, `updateBy`, `updateDate`) VALUES
 	(1, 0, 'Food', 1, 1, 1, 1653024459, 1, 1654232884),
 	(2, 1, 'Fish Market', 1, 1, 1, 1653024459, 1, 1654664752),
@@ -535,7 +584,7 @@ INSERT INTO `item_category` (`id`, `id_parent`, `name`, `status`, `presence`, `i
 	(45, 7, 'Peralatan pembersih kendaraan', 1, 1, 1, 1654566138, 1, 1654566138),
 	(46, 14, 'Sagu', 1, 1, 1, 1656497534, 1, 1656497534);
 
--- Dumping structure for table pos2.item_discount
+-- Dumping structure for table pos_supermarket.item_discount
 CREATE TABLE IF NOT EXISTS `item_discount` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -549,9 +598,9 @@ CREATE TABLE IF NOT EXISTS `item_discount` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.item_discount: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.item_discount: ~0 rows (approximately)
 
--- Dumping structure for table pos2.item_tax
+-- Dumping structure for table pos_supermarket.item_tax
 CREATE TABLE IF NOT EXISTS `item_tax` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `description` varchar(255) NOT NULL,
@@ -564,12 +613,12 @@ CREATE TABLE IF NOT EXISTS `item_tax` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.item_tax: ~2 rows (approximately)
+-- Dumping data for table pos_supermarket.item_tax: ~2 rows (approximately)
 INSERT INTO `item_tax` (`id`, `description`, `status`, `presence`, `inputBy`, `inputDate`, `updateBy`, `updateDate`) VALUES
 	(2, 'Enable', 1, 1, NULL, NULL, NULL, NULL),
 	(3, 'Disable', 1, 1, NULL, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.item_uom
+-- Dumping structure for table pos_supermarket.item_uom
 CREATE TABLE IF NOT EXISTS `item_uom` (
   `id` varchar(50) NOT NULL,
   `name` varchar(255) DEFAULT NULL,
@@ -583,14 +632,14 @@ CREATE TABLE IF NOT EXISTS `item_uom` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.item_uom: ~4 rows (approximately)
+-- Dumping data for table pos_supermarket.item_uom: ~4 rows (approximately)
 INSERT INTO `item_uom` (`id`, `name`, `description`, `status`, `presence`, `inputBy`, `inputDate`, `updateBy`, `updateDate`) VALUES
 	('UOM0001', 'Bag', 'Kilogram ', 1, 1, 1, 1652960737, 1, 1656501138),
 	('UOM0002', 'Pcs', 'Piece', 1, 1, 1, 1653024577, 1, 1654567712),
 	('UOM0003', 'Box', 'Box ', 1, 1, 1, 1653024577, 1, 1654567720),
 	('UOM0004', 'Btl', 'Bottle', 1, 1, 1, 1654567814, 1, 1656501301);
 
--- Dumping structure for table pos2.kiosk_cart
+-- Dumping structure for table pos_supermarket.kiosk_cart
 CREATE TABLE IF NOT EXISTS `kiosk_cart` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kioskUuid` varchar(50) DEFAULT NULL,
@@ -601,8 +650,8 @@ CREATE TABLE IF NOT EXISTS `kiosk_cart` (
   `itemId` varchar(50) DEFAULT NULL,
   `barcode` varchar(50) DEFAULT NULL,
   `originPrice` double DEFAULT 0,
-  `price` double DEFAULT 0,
   `discount` double DEFAULT 0,
+  `price` double DEFAULT 0,
   `memberDiscountPercent` double DEFAULT 0,
   `memberDiscountAmount` double DEFAULT 0,
   `validationNota` int(1) DEFAULT 0,
@@ -614,17 +663,17 @@ CREATE TABLE IF NOT EXISTS `kiosk_cart` (
   `void` int(11) NOT NULL DEFAULT 0,
   `note` varchar(250) DEFAULT NULL,
   `presence` int(1) NOT NULL DEFAULT 1,
-  `inputDate` int(11) DEFAULT NULL,
-  `updateDate` int(11) DEFAULT NULL,
   `updateBy` varchar(50) DEFAULT NULL,
-  `input_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
-  `update_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
+  `inputDate` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
+  `updateDate` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=343 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=364 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.kiosk_cart: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.kiosk_cart: ~1 rows (approximately)
+INSERT INTO `kiosk_cart` (`id`, `kioskUuid`, `promotionId`, `promotionItemId`, `promotionFreeId`, `promotionDiscountId`, `itemId`, `barcode`, `originPrice`, `discount`, `price`, `memberDiscountPercent`, `memberDiscountAmount`, `validationNota`, `isPriceEdit`, `isFreeItem`, `isSpecialPrice`, `isPrintOnBill`, `photo`, `void`, `note`, `presence`, `updateBy`, `inputDate`, `updateDate`) VALUES
+	(363, 'T01.260331.0243', NULL, NULL, NULL, NULL, '899123456710', '899123456710', 300000, 0, 300000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-03-31 09:38:14', '2026-03-31 09:38:14');
 
--- Dumping structure for table pos2.kiosk_cart_free_item
+-- Dumping structure for table pos_supermarket.kiosk_cart_free_item
 CREATE TABLE IF NOT EXISTS `kiosk_cart_free_item` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kioskUuid` varchar(50) DEFAULT NULL,
@@ -648,14 +697,9 @@ CREATE TABLE IF NOT EXISTS `kiosk_cart_free_item` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=164 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.kiosk_cart_free_item: ~3 rows (approximately)
-INSERT INTO `kiosk_cart_free_item` (`id`, `kioskUuid`, `promotionId`, `promotionFreeId`, `itemId`, `freeItemId`, `kioskCartId`, `useBykioskUuidId`, `originPrice`, `barcode`, `scanFree`, `price`, `printOnBill`, `void`, `status`, `presence`, `inputDate`, `updateDate`, `updateBy`) VALUES
-	(157, 'T01.250312.0222', 'occella1', 1, '899123456701', '899123456701', NULL, NULL, 125000, NULL, NULL, 0, NULL, NULL, NULL, 1, NULL, NULL, NULL),
-	(158, 'T01.250312.0222', 'occella2', 9915, '899123456710', '899123456710', NULL, NULL, 300000, NULL, NULL, 0, NULL, NULL, NULL, 1, NULL, NULL, NULL),
-	(160, 'T01.250318.0226', 'occella1', 9911, '899123456702', '899123456702', NULL, NULL, 210000, NULL, NULL, 0, NULL, NULL, NULL, 1, NULL, NULL, NULL),
-	(163, 'T01.250319.0228', 'occella1', 9911, '899123456702', '899123456702', NULL, NULL, 210000, NULL, NULL, 0, NULL, NULL, NULL, 1, NULL, NULL, NULL);
+-- Dumping data for table pos_supermarket.kiosk_cart_free_item: ~0 rows (approximately)
 
--- Dumping structure for table pos2.kiosk_paid_pos
+-- Dumping structure for table pos_supermarket.kiosk_paid_pos
 CREATE TABLE IF NOT EXISTS `kiosk_paid_pos` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kioskUuid` varchar(50) NOT NULL,
@@ -675,9 +719,9 @@ CREATE TABLE IF NOT EXISTS `kiosk_paid_pos` (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.kiosk_paid_pos: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.kiosk_paid_pos: ~0 rows (approximately)
 
--- Dumping structure for table pos2.kiosk_uuid
+-- Dumping structure for table pos_supermarket.kiosk_uuid
 CREATE TABLE IF NOT EXISTS `kiosk_uuid` (
   `kioskUuid` varchar(50) NOT NULL,
   `exchange` varchar(50) NOT NULL,
@@ -696,13 +740,25 @@ CREATE TABLE IF NOT EXISTS `kiosk_uuid` (
   PRIMARY KEY (`kioskUuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.kiosk_uuid: ~3 rows (approximately)
+-- Dumping data for table pos_supermarket.kiosk_uuid: ~1 rows (approximately)
 INSERT INTO `kiosk_uuid` (`kioskUuid`, `exchange`, `cashierId`, `terminalId`, `storeOutlesId`, `memberId`, `photo`, `ilock`, `presence`, `status`, `inputDate`, `startDate`, `input_date`, `update_date`) VALUES
-	('T01.250728.0232', '', '123123', 'T01', NULL, NULL, NULL, 0, 1, 1, 1753687018, '2023-01-01 00:00:00', '2025-07-28 14:16:58', '2025-07-28 14:16:58'),
-	('T01.250728.0233', '', '123123', 'T01', NULL, NULL, NULL, 0, 1, 1, 1753687293, '2023-01-01 00:00:00', '2025-07-28 14:21:33', '2025-07-28 14:21:33'),
-	('T01.250728.0234', '', '123123', 'T01', NULL, NULL, NULL, 0, 1, 1, 1753688959, '2023-01-01 00:00:00', '2025-07-28 14:49:19', '2025-07-28 14:49:19');
+	('T01.260331.0243', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 1, 1774949848, '2023-01-01 00:00:00', '2026-03-31 09:37:28', '2026-03-31 09:37:28');
 
--- Dumping structure for table pos2.payment_bca_ecr
+-- Dumping structure for table pos_supermarket.member
+CREATE TABLE IF NOT EXISTS `member` (
+  `id` varchar(50) NOT NULL DEFAULT '',
+  `name` varchar(250) NOT NULL DEFAULT 'no name',
+  `status` varchar(50) NOT NULL DEFAULT '1',
+  `expDate` varchar(50) NOT NULL DEFAULT '2024-01-01',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table pos_supermarket.member: ~2 rows (approximately)
+INSERT INTO `member` (`id`, `name`, `status`, `expDate`) VALUES
+	('000001', 'Maria', '1', '2036-01-01'),
+	('000002', 'John Wo', '1', '2036-01-01');
+
+-- Dumping structure for table pos_supermarket.payment_bca_ecr
 CREATE TABLE IF NOT EXISTS `payment_bca_ecr` (
   `transactionId` varchar(50) NOT NULL,
   `kioskUuid` varchar(50) DEFAULT NULL,
@@ -725,9 +781,9 @@ CREATE TABLE IF NOT EXISTS `payment_bca_ecr` (
   PRIMARY KEY (`transactionId`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.payment_bca_ecr: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.payment_bca_ecr: ~0 rows (approximately)
 
--- Dumping structure for table pos2.payment_bca_qris
+-- Dumping structure for table pos_supermarket.payment_bca_qris
 CREATE TABLE IF NOT EXISTS `payment_bca_qris` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kioskUuid` varchar(50) NOT NULL,
@@ -743,9 +799,24 @@ CREATE TABLE IF NOT EXISTS `payment_bca_qris` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.payment_bca_qris: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.payment_bca_qris: ~0 rows (approximately)
 
--- Dumping structure for table pos2.payment_name
+-- Dumping structure for table pos_supermarket.payment_method
+CREATE TABLE IF NOT EXISTS `payment_method` (
+  `id` int(6) NOT NULL AUTO_INCREMENT,
+  `paymentTypeId` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table pos_supermarket.payment_method: ~5 rows (approximately)
+INSERT INTO `payment_method` (`id`, `paymentTypeId`) VALUES
+	(1, 'BCA01'),
+	(2, 'BCA31'),
+	(3, 'ID0007'),
+	(4, 'QRT001'),
+	(5, 'CASH');
+
+-- Dumping structure for table pos_supermarket.payment_name
 CREATE TABLE IF NOT EXISTS `payment_name` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL DEFAULT '',
@@ -754,7 +825,7 @@ CREATE TABLE IF NOT EXISTS `payment_name` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=102 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.payment_name: ~13 rows (approximately)
+-- Dumping data for table pos_supermarket.payment_name: ~13 rows (approximately)
 INSERT INTO `payment_name` (`id`, `name`, `status`, `img`) VALUES
 	(10, 'BCA DEBIT', 1, ''),
 	(11, 'BCA VISA', 1, ''),
@@ -770,7 +841,7 @@ INSERT INTO `payment_name` (`id`, `name`, `status`, `img`) VALUES
 	(42, 'BNI MASTERCARD', 1, ''),
 	(101, 'DIGITAL MONEY', 1, '');
 
--- Dumping structure for table pos2.payment_qris_telkom
+-- Dumping structure for table pos_supermarket.payment_qris_telkom
 CREATE TABLE IF NOT EXISTS `payment_qris_telkom` (
   `kioskUuid` varchar(50) NOT NULL,
   `cliTrxNumber` varchar(50) DEFAULT NULL,
@@ -791,9 +862,9 @@ CREATE TABLE IF NOT EXISTS `payment_qris_telkom` (
   PRIMARY KEY (`kioskUuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.payment_qris_telkom: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.payment_qris_telkom: ~0 rows (approximately)
 
--- Dumping structure for table pos2.payment_type
+-- Dumping structure for table pos_supermarket.payment_type
 CREATE TABLE IF NOT EXISTS `payment_type` (
   `id` varchar(50) NOT NULL,
   `edc` int(1) NOT NULL DEFAULT 0,
@@ -818,7 +889,7 @@ CREATE TABLE IF NOT EXISTS `payment_type` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.payment_type: ~10 rows (approximately)
+-- Dumping data for table pos_supermarket.payment_type: ~10 rows (approximately)
 INSERT INTO `payment_type` (`id`, `edc`, `label`, `name`, `com`, `apikey`, `mId`, `nmId`, `merchant`, `timeout`, `image`, `apiUrl`, `apiUrlStatus`, `isLock`, `status`, `presence`, `inputBy`, `inputDate`, `updateBy`, `updateDate`) VALUES
 	('BCA01', 0, 'BCA CARD ERC', 'BCA Debit', '', '', '', '', '', 0, 'http://192.168.202.72/imgs/debit-card.jpg', '', '', 1, 1, 1, NULL, NULL, 1, 1683006321),
 	('BCA31', 0, 'BCA QRIS', 'BCA QRIS', '', '', '', '', '', 0, 'http://192.168.202.72/imgs/QRIS-BCA.jpg', '', '', 1, 1, 1, NULL, NULL, 1, 1681275934),
@@ -831,7 +902,7 @@ INSERT INTO `payment_type` (`id`, `edc`, `label`, `name`, `com`, `apikey`, `mId`
 	('QRISTELKOM', 0, 'QRIS TELKOM', 'CHANDRA SUPERSTORE', '', '139139211206273', '195268799679', 'ID2022218237529', 'MITRALINK SOLUSI', 30, './assets/logo/qrisTelkom.png', 'https://qris.id/restapi/qris/show_qris.php', 'https://qris.id/restapi/qris/checkpaid_qris.php', 1, 0, 1, 1, 1657780329, 1, 1681277052),
 	('VOUCHER', 0, 'VOUCHER', 'VOUCHER', '', '', '', '', '', 0, '', '', '', 1, 0, 1, NULL, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.promotion
+-- Dumping structure for table pos_supermarket.promotion
 CREATE TABLE IF NOT EXISTS `promotion` (
   `id` varchar(50) NOT NULL,
   `typeOfPromotion` int(11) NOT NULL DEFAULT 0,
@@ -858,7 +929,7 @@ CREATE TABLE IF NOT EXISTS `promotion` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.promotion: ~11 rows (approximately)
+-- Dumping data for table pos_supermarket.promotion: ~12 rows (approximately)
 INSERT INTO `promotion` (`id`, `typeOfPromotion`, `storeOutlesId`, `code`, `description`, `startDate`, `endDate`, `discountPercent`, `discountAmount`, `status`, `presence`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`, `inputDate`, `inputBy`, `updateDate`, `updateBy`) VALUES
 	('buy2get1', 3, NULL, NULL, 'Buy 2 Get 1', 1429574400, 2147483647, NULL, NULL, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL),
 	('occella1', 1, NULL, NULL, 'Promo Buy 1 Get 1', 1429574400, 2147483647, NULL, NULL, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL),
@@ -873,7 +944,7 @@ INSERT INTO `promotion` (`id`, `typeOfPromotion`, `storeOutlesId`, `code`, `desc
 	('Promo2', 3, '20101', '00000001', 'DISCOUNT 20% + 30% Item ke 2', 1429574400, 2147483647, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL),
 	('Promo3', 2, '20101', '00000003', 'Buy 3 Get 1', 1429574400, 2147483647, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.promotion_discount
+-- Dumping structure for table pos_supermarket.promotion_discount
 CREATE TABLE IF NOT EXISTS `promotion_discount` (
   `id` varchar(50) NOT NULL DEFAULT '',
   `promotionId` varchar(50) DEFAULT NULL,
@@ -889,13 +960,13 @@ CREATE TABLE IF NOT EXISTS `promotion_discount` (
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.promotion_discount: ~3 rows (approximately)
+-- Dumping data for table pos_supermarket.promotion_discount: ~3 rows (approximately)
 INSERT INTO `promotion_discount` (`id`, `promotionId`, `itemId`, `disc1`, `disc2`, `status`, `presence`, `inputDate`, `inputBy`, `updateDate`, `updateBy`) VALUES
 	('00001', 'Promo2', '9900000001', 20, 30, 1, 1, NULL, NULL, NULL, NULL),
 	('00002', 'Promo2', '9900000002', 20, 30, 1, 1, NULL, NULL, NULL, NULL),
 	('00003', 'Promo2', '9900000003', 20, 30, 1, 1, NULL, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.promotion_free
+-- Dumping structure for table pos_supermarket.promotion_free
 CREATE TABLE IF NOT EXISTS `promotion_free` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `promotionId` varchar(50) DEFAULT NULL,
@@ -915,7 +986,7 @@ CREATE TABLE IF NOT EXISTS `promotion_free` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9916 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.promotion_free: ~8 rows (approximately)
+-- Dumping data for table pos_supermarket.promotion_free: ~8 rows (approximately)
 INSERT INTO `promotion_free` (`id`, `promotionId`, `itemId`, `qty`, `freeItemId`, `freeQty`, `applyMultiply`, `scanFree`, `printOnBill`, `status`, `presence`, `inputDate`, `inputBy`, `updateBy`, `updateDate`) VALUES
 	(1, 'occella1', '899123456701', 1, '899123456701', 1, 0, 0, 0, 1, 1, NULL, NULL, NULL, NULL),
 	(9909, 'Promo3', '8997208072477', 3, '8997208072477', 1, 0, 0, 0, 1, 1, NULL, NULL, NULL, NULL),
@@ -926,7 +997,7 @@ INSERT INTO `promotion_free` (`id`, `promotionId`, `itemId`, `qty`, `freeItemId`
 	(9914, 'occella1', '899123456705', 1, '899123456706', 1, 0, 0, 0, 1, 1, NULL, NULL, NULL, NULL),
 	(9915, 'occella2', '899123456710', 2, '899123456710', 1, 0, 0, 0, 1, 1, NULL, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.promotion_item
+-- Dumping structure for table pos_supermarket.promotion_item
 CREATE TABLE IF NOT EXISTS `promotion_item` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `promotionId` varchar(50) NOT NULL DEFAULT '',
@@ -947,7 +1018,7 @@ CREATE TABLE IF NOT EXISTS `promotion_item` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.promotion_item: ~7 rows (approximately)
+-- Dumping data for table pos_supermarket.promotion_item: ~7 rows (approximately)
 INSERT INTO `promotion_item` (`id`, `promotionId`, `itemId`, `qtyFrom`, `qtyTo`, `specialPrice`, `disc1`, `disc2`, `disc3`, `discountPrice`, `presence`, `status`, `inputDate`, `inputBy`, `updateDate`, `updateBy`) VALUES
 	(1, 'Promo1', '1569690', 1, 9999, 0, 20, 30, 0, 0, 1, 1, NULL, NULL, NULL, NULL),
 	(2, 'Promo1', '1571384', 1, 9999, 0, 20, 30, 0, 0, 1, 1, NULL, NULL, NULL, NULL),
@@ -957,7 +1028,7 @@ INSERT INTO `promotion_item` (`id`, `promotionId`, `itemId`, `qtyFrom`, `qtyTo`,
 	(8, 'occella5', '899123456740', 1, 99999, 99001, 0, 0, 0, 0, 1, 1, NULL, NULL, NULL, NULL),
 	(9, 'occella7', '899123456750', 1, 99, 199000, 0, 0, 0, 0, 1, 1, NULL, NULL, NULL, NULL);
 
--- Dumping structure for table pos2.promo_fixed
+-- Dumping structure for table pos_supermarket.promo_fixed
 CREATE TABLE IF NOT EXISTS `promo_fixed` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(50) DEFAULT NULL,
@@ -973,7 +1044,7 @@ CREATE TABLE IF NOT EXISTS `promo_fixed` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.promo_fixed: ~8 rows (approximately)
+-- Dumping data for table pos_supermarket.promo_fixed: ~8 rows (approximately)
 INSERT INTO `promo_fixed` (`id`, `name`, `icon`, `description`, `shortDesc`, `targetAmount`, `isMultiple`, `voucherAmount`, `ifAmountNearTarget`, `status`, `expDate`) VALUES
 	(1, 'Free Packing', '<i class="bi bi-check"></i>', 'Belanja di atas Rp 100.000, Anda dapat parkir gratis', 'Gratis Parkir', 100000, 0, NULL, 50.00, 1, '2025-01-01'),
 	(10, 'Lucky dip', '<i class="bi bi-check"></i>', 'Anda berhak mendapatkan  nomor lucky dip', 'Lucky dip', 100000, 1, NULL, 70.00, 0, '2025-09-25'),
@@ -984,7 +1055,21 @@ INSERT INTO `promo_fixed` (`id`, `name`, `icon`, `description`, `shortDesc`, `ta
 	(102, 'Get Voucher', '<i class="bi bi-check"></i>', 'Setting nilai maximum voucher', 'Get Voucher', 100000, 0, 1.00, 80.00, 1, '2024-01-01'),
 	(103, 'Cashback Brands', '<i class="bi bi-check"></i>', 'Belanja dengan nilai tertentu dapat discount untuk brand tertentu untuk pembelanjaan berikutnya', 'Cashback Brands', 100000, 0, 4.00, 42.00, 1, '2024-01-01');
 
--- Dumping structure for table pos2.reset
+-- Dumping structure for table pos_supermarket.refund
+CREATE TABLE IF NOT EXISTS `refund` (
+  `id` varchar(50) NOT NULL DEFAULT '',
+  `transactionId` varchar(50) NOT NULL DEFAULT '',
+  `refundTotalAmount` int(9) NOT NULL DEFAULT 0,
+  `terminalId` varchar(50) NOT NULL DEFAULT '',
+  `inputDate` int(9) NOT NULL DEFAULT 0,
+  `input_date` datetime NOT NULL DEFAULT '2024-01-01 00:00:00',
+  `input_by` varchar(50) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table pos_supermarket.refund: ~0 rows (approximately)
+
+-- Dumping structure for table pos_supermarket.reset
 CREATE TABLE IF NOT EXISTS `reset` (
   `id` varchar(50) NOT NULL,
   `storeOutlesId` varchar(50) DEFAULT NULL,
@@ -1006,9 +1091,9 @@ CREATE TABLE IF NOT EXISTS `reset` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.reset: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.reset: ~0 rows (approximately)
 
--- Dumping structure for table pos2.reset_payment
+-- Dumping structure for table pos_supermarket.reset_payment
 CREATE TABLE IF NOT EXISTS `reset_payment` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `resetId` char(10) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
@@ -1020,9 +1105,24 @@ CREATE TABLE IF NOT EXISTS `reset_payment` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.reset_payment: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.reset_payment: ~0 rows (approximately)
 
--- Dumping structure for table pos2.sync
+-- Dumping structure for table pos_supermarket.settlement
+CREATE TABLE IF NOT EXISTS `settlement` (
+  `id` varchar(50) NOT NULL DEFAULT '',
+  `total` int(4) NOT NULL DEFAULT 0,
+  `amount` int(11) NOT NULL DEFAULT 0,
+  `input_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
+  `upload` int(1) NOT NULL DEFAULT 0,
+  `upload_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Dumping data for table pos_supermarket.settlement: ~0 rows (approximately)
+INSERT INTO `settlement` (`id`, `total`, `amount`, `input_date`, `upload`, `upload_date`) VALUES
+	('T01SET000039', 10, 8095684, '2025-07-28 14:19:45', 0, '2023-01-01 00:00:00');
+
+-- Dumping structure for table pos_supermarket.sync
 CREATE TABLE IF NOT EXISTS `sync` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `path` varchar(250) NOT NULL DEFAULT '0',
@@ -1035,7 +1135,7 @@ CREATE TABLE IF NOT EXISTS `sync` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.sync: ~6 rows (approximately)
+-- Dumping data for table pos_supermarket.sync: ~6 rows (approximately)
 INSERT INTO `sync` (`id`, `path`, `fileName`, `totalInsert`, `totalTime`, `result`, `lastSycn`, `inputDate`) VALUES
 	(1, 'C:/xampp8240/htdocs/app/clients/chandra/sync/item.txt', 'item.txt', 0, 68, 'Success!', '2024-01-15 17:52:50.000', 1705315970),
 	(2, 'C:/xampp8240/htdocs/app/clients/chandra/sync/barcode.txt', 'barcode.txt', 0, 13, 'Success!', '2024-01-15 17:55:57.000', 1705316157),
@@ -1044,7 +1144,7 @@ INSERT INTO `sync` (`id`, `path`, `fileName`, `totalInsert`, `totalTime`, `resul
 	(5, 'C:/xampp8240/htdocs/app/clients/chandra/sync/promo_free.txt', 'promo_free.txt', 0, 17, 'Success!', '2024-01-15 17:57:50.000', 1705316270),
 	(6, 'C:/xampp8240/htdocs/app/clients/chandra/sync/KMEMBER.txt', 'KMEMBER.txt', 0, 2, 'Success!', '2024-01-15 17:59:05.000', 1705316345);
 
--- Dumping structure for table pos2.sync_log
+-- Dumping structure for table pos_supermarket.sync_log
 CREATE TABLE IF NOT EXISTS `sync_log` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `module` varchar(50) DEFAULT NULL,
@@ -1058,9 +1158,9 @@ CREATE TABLE IF NOT EXISTS `sync_log` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.sync_log: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.sync_log: ~0 rows (approximately)
 
--- Dumping structure for table pos2.taxcode
+-- Dumping structure for table pos_supermarket.taxcode
 CREATE TABLE IF NOT EXISTS `taxcode` (
   `id` varchar(50) NOT NULL,
   `name` varchar(50) DEFAULT NULL,
@@ -1075,13 +1175,13 @@ CREATE TABLE IF NOT EXISTS `taxcode` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.taxcode: ~3 rows (approximately)
+-- Dumping data for table pos_supermarket.taxcode: ~3 rows (approximately)
 INSERT INTO `taxcode` (`id`, `name`, `taxType`, `percentage`, `status`, `presence`, `inputDate`, `inputBy`, `updateDate`, `updateBy`) VALUES
 	('0', 'Non PPN', 0, 0, 1, 1, 1654663251, 1, 1659435264, 1),
 	('1', 'PPN 11% Inc', 1, 11, 1, 1, 1654490568, 1, 1661746470, 1),
 	('2', 'PPN 11% Excl', 0, 11, 1, 1, NULL, NULL, 1659435264, 1);
 
--- Dumping structure for table pos2.tebus_murah
+-- Dumping structure for table pos_supermarket.tebus_murah
 CREATE TABLE IF NOT EXISTS `tebus_murah` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `description` varchar(250) DEFAULT NULL,
@@ -1096,9 +1196,9 @@ CREATE TABLE IF NOT EXISTS `tebus_murah` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.tebus_murah: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.tebus_murah: ~0 rows (approximately)
 
--- Dumping structure for table pos2.tebus_murah_items
+-- Dumping structure for table pos_supermarket.tebus_murah_items
 CREATE TABLE IF NOT EXISTS `tebus_murah_items` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `tembusMurahId` int(11) NOT NULL DEFAULT 0,
@@ -1109,9 +1209,9 @@ CREATE TABLE IF NOT EXISTS `tebus_murah_items` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.tebus_murah_items: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.tebus_murah_items: ~0 rows (approximately)
 
--- Dumping structure for table pos2.transaction
+-- Dumping structure for table pos_supermarket.transaction
 CREATE TABLE IF NOT EXISTS `transaction` (
   `id` varchar(50) NOT NULL,
   `transactionDate` int(11) DEFAULT NULL,
@@ -1151,7 +1251,7 @@ CREATE TABLE IF NOT EXISTS `transaction` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.transaction: ~10 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction: ~10 rows (approximately)
 INSERT INTO `transaction` (`id`, `transactionDate`, `transaction_date`, `kioskUuid`, `resetId`, `settlementId`, `memberId`, `paymentTypeId`, `storeOutlesId`, `terminalId`, `struk`, `total`, `locked`, `startDate`, `endDate`, `cashierId`, `pthType`, `subTotal`, `discount`, `discountMember`, `voucher`, `bkp`, `dpp`, `ppn`, `nonBkp`, `finalPrice`, `photo`, `userId`, `cashDrawer`, `printing`, `presence`, `inputDate`, `input_date`, `updateDate`, `update_date`) VALUES
 	('123123.0121', 1705316417, '2024-01-15 18:00:17', 'UATx1.240115.0217', NULL, 'T01SET000039', NULL, '', 'Comingsoon', 'UATx1', '123123.0121', 157500, 1, '2023-01-01 00:00:00.000', '2024-01-15 18:00:17.000', '123123', 1, 0, 0, 0, 0, 141892, 157500, 15608, 0, 157500, NULL, NULL, 1, 1, 1, 1705316417, '2024-01-15 18:00:17', 1705316417, '2024-01-15 18:00:17'),
 	('123123.0122', 1705568554, '2024-01-18 16:02:34', 'UATx1.240117.0218', NULL, 'T01SET000039', NULL, '', 'Comingsoon', 'UATx1', '123123.0122', 22500, 1, '2023-01-01 00:00:00.000', '2024-01-18 16:02:34.000', '123123', 1, 0, 0, 0, 0, 20271, 22500, 2229, 0, 22500, NULL, NULL, 1, 1, 1, 1705568554, '2024-01-18 16:02:34', 1705568554, '2024-01-18 16:02:34'),
@@ -1164,7 +1264,7 @@ INSERT INTO `transaction` (`id`, `transactionDate`, `transaction_date`, `kioskUu
 	('123123.0129', 1753685813, '2025-07-28 13:56:53', 'T01.250728.0230', NULL, 'T01SET000039', NULL, '', 'Comingsoon', 'T01', '123123.0129', 2762000, 1, '2023-01-01 00:00:00.000', '2025-07-28 13:56:53.000', '123123', 1, 0, 440000, 0, 0, 0, 0, 0, 0, 2322000, NULL, NULL, 1, 1, 1, 1753685813, '2025-07-28 13:56:53', 1753685813, '2025-07-28 13:56:53'),
 	('123123.0130', 1753686997, '2025-07-28 14:16:37', 'T01.250728.0231', NULL, 'T01SET000039', '000001', '', 'Comingsoon', 'T01', '123123.0130', 2324000, 1, '2023-01-01 00:00:00.000', '2025-07-28 14:16:37.000', '123123', 1, 0, 440000, 0, 0, 0, 0, 0, 0, 1884000, NULL, NULL, 1, 1, 1, 1753686997, '2025-07-28 14:16:37', 1753686997, '2025-07-28 14:16:37');
 
--- Dumping structure for table pos2.transaction_detail
+-- Dumping structure for table pos_supermarket.transaction_detail
 CREATE TABLE IF NOT EXISTS `transaction_detail` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `transactionId` varchar(50) DEFAULT NULL,
@@ -1195,7 +1295,7 @@ CREATE TABLE IF NOT EXISTS `transaction_detail` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.transaction_detail: ~38 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction_detail: ~38 rows (approximately)
 INSERT INTO `transaction_detail` (`id`, `transactionId`, `promotionId`, `promotionFreeId`, `promotionItemId`, `promotionDiscountId`, `itemId`, `barcode`, `originPrice`, `price`, `discount`, `memberDiscountAmount`, `memberDiscountPercent`, `validationNota`, `isPriceEdit`, `isFreeItem`, `isSpecialPrice`, `isPrintOnBill`, `note`, `void`, `refund`, `exchange`, `presence`, `inputDate`, `updateDate`, `updateBy`) VALUES
 	(1, '123123.0121', '0', NULL, 0, NULL, '0070024', '0070024', 22500, 22500, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1705316376, 1705316417, NULL),
 	(2, '123123.0121', '0', NULL, NULL, NULL, '0070024', '0070024', 22500, 22500, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1705316385, 1705316417, NULL),
@@ -1236,7 +1336,7 @@ INSERT INTO `transaction_detail` (`id`, `transactionId`, `promotionId`, `promoti
 	(45, '123123.0130', 'Promo1', NULL, 2, NULL, '1571384', '1571384', 1000000, 560000, 440000, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1753686755, 1753686997, NULL),
 	(46, '123123.0130', NULL, NULL, NULL, NULL, '3', '1569723', 1860000, 1674000, 0, 186000, 10, 0, 0, '', 0, 1, '', 0, '', '', 1, 1753686821, 1753686997, NULL);
 
--- Dumping structure for table pos2.transaction_payment
+-- Dumping structure for table pos_supermarket.transaction_payment
 CREATE TABLE IF NOT EXISTS `transaction_payment` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `transactionId` varchar(50) NOT NULL DEFAULT '',
@@ -1255,7 +1355,7 @@ CREATE TABLE IF NOT EXISTS `transaction_payment` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=151 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.transaction_payment: ~27 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction_payment: ~37 rows (approximately)
 INSERT INTO `transaction_payment` (`id`, `transactionId`, `paymentTypeId`, `paymentNameId`, `amount`, `rounding`, `voucherNumber`, `approvedCode`, `refCode`, `presence`, `inputDate`, `updateDate`, `input_date`, `update_date`) VALUES
 	(72, '123123.0112', 'CASH', '', 20000, NULL, NULL, '', '', 1, 1704970878, 1704970878, '2024-01-11 18:01:18', '2024-01-11 18:01:18'),
 	(73, '123123.0112', 'CASH', '', 5000, NULL, NULL, '', '', 1, 1704970878, 1704970878, '2024-01-11 18:01:18', '2024-01-11 18:01:18'),
@@ -1295,7 +1395,7 @@ INSERT INTO `transaction_payment` (`id`, `transactionId`, `paymentTypeId`, `paym
 	(149, '123123.0130', 'CASH', '', 130000, NULL, NULL, '', '', 1, 1753686997, 1753686997, '2025-07-28 14:16:37', '2025-07-28 14:16:37'),
 	(150, '123123.0130', 'CASH', '', 1994000, NULL, NULL, '', '', 1, 1753686997, 1753686997, '2025-07-28 14:16:37', '2025-07-28 14:16:37');
 
--- Dumping structure for table pos2.transaction_printlog
+-- Dumping structure for table pos_supermarket.transaction_printlog
 CREATE TABLE IF NOT EXISTS `transaction_printlog` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `transactionId` varchar(50) DEFAULT NULL,
@@ -1305,11 +1405,11 @@ CREATE TABLE IF NOT EXISTS `transaction_printlog` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.transaction_printlog: ~1 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction_printlog: ~0 rows (approximately)
 INSERT INTO `transaction_printlog` (`id`, `transactionId`, `inputDate`, `input_date`, `inputBy`) VALUES
 	(1, '123123.0122', 1705568822, '2024-01-18 16:07:02', NULL);
 
--- Dumping structure for table pos2.user
+-- Dumping structure for table pos_supermarket.user
 CREATE TABLE IF NOT EXISTS `user` (
   `id` varchar(50) NOT NULL,
   `name` varchar(250) DEFAULT NULL,
@@ -1328,26 +1428,26 @@ CREATE TABLE IF NOT EXISTS `user` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.user: ~2 rows (approximately)
+-- Dumping data for table pos_supermarket.user: ~2 rows (approximately)
 INSERT INTO `user` (`id`, `name`, `userAccessId`, `storeOutlesId`, `password`, `status`, `presence`, `saveFunc`, `saveShortCut`, `inputBy`, `inputDate`, `updateBy`, `updateDate`, `update_date`) VALUES
-	('123123', 'Cashier', 10, NULL, NULL, 1, 1, '[1,2,3,4,5,6,7,12,0,0,0,0]', NULL, NULL, NULL, NULL, 1698052381, '2023-10-23 09:13:01'),
+	('123123', 'Cashier', 10, NULL, '4297f44b13955235245b2497399d7a93', 1, 1, '[1,2,3,4,5,6,7,12,0,0,0,0]', NULL, NULL, NULL, NULL, 1698052381, '2023-10-23 09:13:01'),
 	('123456789', 'Supervisor', 1, NULL, '4297f44b13955235245b2497399d7a93', 1, 1, NULL, NULL, NULL, NULL, NULL, NULL, '2023-01-01 00:00:00');
 
--- Dumping structure for table pos2.user_access
+-- Dumping structure for table pos_supermarket.user_access
 CREATE TABLE IF NOT EXISTS `user_access` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.user_access: ~4 rows (approximately)
+-- Dumping data for table pos_supermarket.user_access: ~4 rows (approximately)
 INSERT INTO `user_access` (`id`, `name`) VALUES
 	(1, 'Supervisor'),
 	(2, 'IT'),
 	(3, 'Management'),
 	(10, 'Cashier');
 
--- Dumping structure for table pos2.user_auth
+-- Dumping structure for table pos_supermarket.user_auth
 CREATE TABLE IF NOT EXISTS `user_auth` (
   `id` varchar(50) NOT NULL DEFAULT '',
   `userId` varchar(50) NOT NULL DEFAULT '',
@@ -1362,14 +1462,18 @@ CREATE TABLE IF NOT EXISTS `user_auth` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.user_auth: ~4 rows (approximately)
+-- Dumping data for table pos_supermarket.user_auth: ~8 rows (approximately)
 INSERT INTO `user_auth` (`id`, `userId`, `agent`, `client_ip`, `terminalId`, `inputDate`, `updateDate`, `status`, `token`, `inputBy`) VALUES
 	('', '123456789', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '::1', '', '0000-00-00 00:00:00', '0000-00-00 00:00:00', 1, 'TT-112c248d4eb08b97c400ba671f18e76a', '123456789'),
 	('65a7667f8cf7c', '65a7667f8cf7c', '', '', 'UATx1', '2024-01-17 12:32:47', '2024-01-01 00:00:00', 1, NULL, NULL),
 	('65ae42980788a', '65ae42980788a', '', '', 'UATx1', '2024-01-22 17:25:28', '2024-01-01 00:00:00', 1, NULL, NULL),
-	('67d918495aea2', '67d918495aea2', '', '', 'T01', '2025-03-18 13:52:57', '2024-01-01 00:00:00', 1, NULL, NULL);
+	('67d918495aea2', '67d918495aea2', '', '', 'T01', '2025-03-18 13:52:57', '2024-01-01 00:00:00', 1, NULL, NULL),
+	('69ca36e3cc832695', '123123', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '::1', 'T01', '2026-03-30 15:40:03', '2026-03-30 15:40:51', 0, 'TT-Q7Oy29OoYpaBGrooCFrNLakNdIjYKjHo', '123123'),
+	('69ca37138fde55b2', '123123', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '::1', 'T01', '2026-03-30 15:40:51', '2026-03-30 17:37:11', 0, 'TT-S1Psp_a7VM7yFLiG8iwBU1IjMwtJ4K80', '123123'),
+	('69ca5260482d1bc6', '123123', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '::1', 'T01', '2026-03-30 17:37:20', '2026-03-30 17:49:32', 0, 'TT-rdiedeJAVOihx_80oJw3VInwZrtDBjtE', '123123'),
+	('69ca5555b4339d5e', '123123', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWeb', '::1', 'T01', '2026-03-30 17:49:57', '2026-03-30 17:49:57', 1, 'TT-lnzYi2JnSkz6xkpXatONufIza_diMHpk', '123123');
 
--- Dumping structure for table pos2.user_func
+-- Dumping structure for table pos_supermarket.user_func
 CREATE TABLE IF NOT EXISTS `user_func` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `userId` varchar(50) NOT NULL DEFAULT '',
@@ -1379,133 +1483,25 @@ CREATE TABLE IF NOT EXISTS `user_func` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=armscii8 COLLATE=armscii8_bin;
 
--- Dumping data for table pos2.user_func: ~16 rows (approximately)
-INSERT INTO `user_func` (`id`, `userId`, `number`, `color`, `sorting`) VALUES
-	(25, '123123', 0, '', 1),
-	(26, '123123', 0, '', 2),
-	(27, '123123', 0, '', 1),
-	(28, '123123', 0, '', 3),
-	(29, '123123', 0, '', 4),
-	(30, '123123', 0, '', 5),
-	(31, '123123', 0, '', 6),
-	(32, '123123', 0, '', 6),
-	(33, '123123', 0, '', 7),
-	(34, '123123', 0, '', 8),
-	(35, '123123', 0, '', 9),
-	(36, '123123', 0, '', 10),
-	(37, '123123', 0, '', 10),
-	(38, '123123', 0, '', 11),
-	(39, '123123', 0, '', 12),
-	(40, '123123', 0, '', 12);
+-- Dumping data for table pos_supermarket.user_func: ~0 rows (approximately)
 
--- Dumping structure for table pos2.balance
-CREATE TABLE IF NOT EXISTS `balance` (
+-- Dumping structure for table pos_supermarket.user_pin
+CREATE TABLE IF NOT EXISTS `user_pin` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `cashIn` int(11) NOT NULL DEFAULT 0,
-  `cashOut` int(11) NOT NULL DEFAULT 0,
-  `transactionId` varchar(50) NOT NULL DEFAULT '',
-  `kioskUuid` varchar(50) NOT NULL DEFAULT '',
-  `cashierId` varchar(50) NOT NULL,
-  `terminalId` varchar(50) NOT NULL,
-  `settlementId` varchar(50) NOT NULL,
-  `close` int(1) NOT NULL DEFAULT 0,
-  `input_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `userId` varchar(250) DEFAULT NULL,
+  `pin` varchar(250) NOT NULL,
+  `updateBy` int(11) DEFAULT NULL,
+  `updateDate` int(11) DEFAULT NULL,
+  `update_date` datetime DEFAULT '2023-01-01 00:00:00',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `pin` (`pin`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos2.balance: ~14 rows (approximately)
-INSERT INTO `balance` (`id`, `cashIn`, `cashOut`, `transactionId`, `kioskUuid`, `cashierId`, `terminalId`, `settlementId`, `close`, `input_date`) VALUES
-	(1, 50, 0, '_S1', '', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-15 17:51:19'),
-	(2, 200000, -42500, '123123.0121', 'UATx1.240115.0217', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-15 18:00:16'),
-	(3, 8500, 0, '123123.0123', 'UATx1.240118.0219', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-22 18:14:38'),
-	(4, 200000, -15320, '123123.0123', 'UATx1.240118.0219', '123123', 'UATx1', 'T01SET000039', 1, '2024-01-22 19:06:49'),
-	(5, 400000, -100000, '123123.0124', 'T01.250312.0221', '123123', 'T01', 'T01SET000039', 1, '2025-03-12 14:49:16'),
-	(6, 500000, -18000, '123123.0125', 'T01.250312.0223', '123123', 'T01', 'T01SET000039', 1, '2025-03-13 16:05:24'),
-	(7, 1400000, -79506, '123123.0126', 'T01.250312.0222', '123123', 'T01', 'T01SET000039', 1, '2025-03-18 13:54:15'),
-	(8, 200000, -11000, '123123.0127', 'T01.250318.0226', '123123', 'T01', 'T01SET000039', 1, '2025-03-18 15:51:19'),
-	(9, 400000, -75000, '123123.0128', 'T01.250319.0228', '123123', 'T01', 'T01SET000039', 1, '2025-03-19 15:34:43'),
-	(10, 2900000, -138000, '123123.0129', 'T01.250728.0230', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 13:56:53'),
-	(11, 200000, 0, '123123.0130', 'T01.250728.0231', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 14:15:57'),
-	(12, 130000, 0, '123123.0130', 'T01.250728.0231', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 14:16:18'),
-	(13, 2100000, -106000, '123123.0130', 'T01.250728.0231', '123123', 'T01', 'T01SET000039', 1, '2025-07-28 14:16:35'),
-	(14, 100000, 0, '_S1', '', '123123', 'T01', '', 0, '2025-07-28 14:21:17');
+-- Dumping data for table pos_supermarket.user_pin: ~1 rows (approximately)
+INSERT INTO `user_pin` (`id`, `userId`, `pin`, `updateBy`, `updateDate`, `update_date`) VALUES
+	(1, '123456789', '4297f44b13955235245b2497399d7a93', NULL, NULL, '2023-01-01 00:00:00');
 
--- Dumping structure for table pos2.exchange
-CREATE TABLE IF NOT EXISTS `exchange` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `kioskUuid` varchar(50) NOT NULL DEFAULT '',
-  `exchange` varchar(50) NOT NULL DEFAULT '',
-  `transactionId` varchar(50) NOT NULL DEFAULT '',
-  `transactionDetailId` varchar(50) NOT NULL DEFAULT '',
-  `itemId` varchar(50) NOT NULL DEFAULT '',
-  `refundAmount` int(9) NOT NULL DEFAULT 0,
-  `exchangeItemId` varchar(50) NOT NULL DEFAULT '',
-  `exchangeAmount` int(9) NOT NULL DEFAULT 0,
-  `input_date` datetime NOT NULL DEFAULT '2024-01-01 00:00:00',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Dumping data for table pos2.exchange: ~0 rows (approximately)
-
--- Dumping structure for table pos2.member
-CREATE TABLE IF NOT EXISTS `member` (
-  `id` varchar(50) NOT NULL DEFAULT '',
-  `name` varchar(250) NOT NULL DEFAULT 'no name',
-  `status` varchar(50) NOT NULL DEFAULT '1',
-  `expDate` varchar(50) NOT NULL DEFAULT '2024-01-01',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Dumping data for table pos2.member: ~2 rows (approximately)
-INSERT INTO `member` (`id`, `name`, `status`, `expDate`) VALUES
-	('000001', 'Maria', '1', '2036-01-01'),
-	('000002', 'John Wo', '1', '2036-01-01');
-
--- Dumping structure for table pos2.payment_method
-CREATE TABLE IF NOT EXISTS `payment_method` (
-  `id` int(6) NOT NULL AUTO_INCREMENT,
-  `paymentTypeId` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Dumping data for table pos2.payment_method: ~5 rows (approximately)
-INSERT INTO `payment_method` (`id`, `paymentTypeId`) VALUES
-	(1, 'BCA01'),
-	(2, 'BCA31'),
-	(3, 'ID0007'),
-	(4, 'QRT001'),
-	(5, 'CASH');
-
--- Dumping structure for table pos2.refund
-CREATE TABLE IF NOT EXISTS `refund` (
-  `id` varchar(50) NOT NULL DEFAULT '',
-  `transactionId` varchar(50) NOT NULL DEFAULT '',
-  `refundTotalAmount` int(9) NOT NULL DEFAULT 0,
-  `terminalId` varchar(50) NOT NULL DEFAULT '',
-  `inputDate` int(9) NOT NULL DEFAULT 0,
-  `input_date` datetime NOT NULL DEFAULT '2024-01-01 00:00:00',
-  `input_by` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Dumping data for table pos2.refund: ~0 rows (approximately)
-
--- Dumping structure for table pos2.settlement
-CREATE TABLE IF NOT EXISTS `settlement` (
-  `id` varchar(50) NOT NULL DEFAULT '',
-  `total` int(4) NOT NULL DEFAULT 0,
-  `amount` int(11) NOT NULL DEFAULT 0,
-  `input_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
-  `upload` int(1) NOT NULL DEFAULT 0,
-  `upload_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- Dumping data for table pos2.settlement: ~0 rows (approximately)
-INSERT INTO `settlement` (`id`, `total`, `amount`, `input_date`, `upload`, `upload_date`) VALUES
-	('T01SET000039', 10, 8095684, '2025-07-28 14:19:45', 0, '2023-01-01 00:00:00');
-
--- Dumping structure for table pos2.voucher
+-- Dumping structure for table pos_supermarket.voucher
 CREATE TABLE IF NOT EXISTS `voucher` (
   `id` varchar(50) NOT NULL DEFAULT '',
   `voucherMasterId` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_general_ci NOT NULL DEFAULT '0',
@@ -1520,9 +1516,9 @@ CREATE TABLE IF NOT EXISTS `voucher` (
   UNIQUE KEY `number` (`number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=armscii8 COLLATE=armscii8_bin;
 
--- Dumping data for table pos2.voucher: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.voucher: ~0 rows (approximately)
 
--- Dumping structure for table pos2.voucher_master
+-- Dumping structure for table pos_supermarket.voucher_master
 CREATE TABLE IF NOT EXISTS `voucher_master` (
   `id` varchar(50) NOT NULL DEFAULT '',
   `name` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_general_ci NOT NULL,
@@ -1534,7 +1530,7 @@ CREATE TABLE IF NOT EXISTS `voucher_master` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=armscii8 COLLATE=armscii8_bin;
 
--- Dumping data for table pos2.voucher_master: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.voucher_master: ~0 rows (approximately)
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

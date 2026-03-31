@@ -16,7 +16,15 @@ function initSocket(httpServer) {
     socket.on('terminal:register', (data) => {
       if (data && data.terminalId) {
         socket.join(`terminal:${data.terminalId}`);
+        socket.terminalId = data.terminalId;
         console.log(`[Socket.IO] Terminal registered: ${data.terminalId}`);
+      }
+    });
+
+    // Relay display:update to all other clients in the same terminal room
+    socket.on('display:update', (data) => {
+      if (socket.terminalId) {
+        socket.to(`terminal:${socket.terminalId}`).emit('display:update', data);
       }
     });
 
