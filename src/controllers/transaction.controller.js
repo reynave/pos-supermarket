@@ -60,7 +60,27 @@ async function listTransactions(req, res, next) {
   }
 }
 
+/**
+ * GET /api/transactions/:id
+ * Get one completed transaction for receipt/reprint.
+ */
+async function getTransactionById(req, res, next) {
+  try {
+    const { id } = req.params;
+    const result = await transactionService.getTransactionById(id);
+
+    if (!result) {
+      return error(res, 'Transaction not found', 404);
+    }
+
+    return success(res, result);
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createTransaction,
   listTransactions,
+  getTransactionById,
 };

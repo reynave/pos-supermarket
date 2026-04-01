@@ -102,6 +102,41 @@ async function addToCart(kioskUuid, item, barcode) {
   return result.insertId;
 }
 
+/**
+ * Duplicate selected item into kiosk_cart based on qty.
+ * Inserts one row per qty, preserving selected item id/barcode and current item price.
+ */
+async function addQtyBySelected(kioskUuid, item, barcode, qty) {
+  const nowDatetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const originPrice = item.price1 || 0;
+  const values = [];
+
+  for (let i = 0; i < qty; i += 1) {
+    values.push([
+      kioskUuid,
+      item.id,
+      barcode || null,
+      originPrice,
+      originPrice,
+      1,
+      nowDatetime,
+      nowDatetime,
+    ]);
+  }
+
+  const [result] = await pool.query(
+    `INSERT INTO kiosk_cart
+       (kioskUuid, itemId, barcode, originPrice, price, presence, inputDate, updateDate)
+     VALUES ?`,
+    [values]
+  );
+
+  return {
+    insertedCount: Number(result.affectedRows || 0),
+    firstInsertId: result.insertId || null,
+  };
+}
+
 module.exports = {
   findKioskUuid,
   findByBarcode,
@@ -109,4 +144,5 @@ module.exports = {
   searchByDescription,
   getBarcodesByItemId,
   addToCart,
+  addQtyBySelected,
 };

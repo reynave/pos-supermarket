@@ -16,6 +16,7 @@ const itemRoutes = require('./routes/item.routes');
 const cartRoutes = require('./routes/cart.routes');
 const shiftRoutes = require('./routes/shift.routes');
 const transactionRoutes = require('./routes/transaction.routes');
+const paymentRoutes = require('./routes/payment.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -52,6 +53,7 @@ app.use('/api/item', itemRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/shift', shiftRoutes);
 app.use('/api/transactions', transactionRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // --- 404 ---
 app.use((_req, res) => {

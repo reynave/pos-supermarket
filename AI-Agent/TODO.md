@@ -25,6 +25,7 @@
 - [x] Middleware: global error handler (`middleware/errorHandler.js`)
 - [x] Utils: standardized response (`utils/response.js`)
 - [x] Health check endpoint `GET /api/health`
+  - [x] Dipakai oleh frontend startup setup (`/startup`) untuk test koneksi server
 
 ---
 
@@ -111,25 +112,23 @@
 
 ### 7a. Payment Types & Basic
 
-- [ ] `GET /api/payment/types` — List available payment types (from `payment_type`)
-- [ ] `POST /api/payment/add` — Add payment entry to active transaction
-  - Insert ke `kiosk_paid_pos`
+- [x] `GET /api/payment/types` — List available payment types (from `payment_type`, filtered `isLock=1`)
+- [x] `GET /api/payment/pending/:kioskUuid` — Get current paid entries from `kiosk_paid_pos`
+- [x] `POST /api/payment/add` — Add payment entry to `kiosk_paid_pos`; returns updated list + totalPaid
   - Support split payment (multiple entries per kioskUuid)
-  - Validate: total paid tidak boleh melebihi finalPrice (kecuali CASH untuk kembalian)
-- [ ] `DELETE /api/payment/:id` — Remove payment entry
+- [x] `DELETE /api/payment/:id` — Remove payment entry from `kiosk_paid_pos`; returns updated list
 
 ### 7b. Finalize Transaction
 
-- [ ] `POST /api/payment/finalize` — Complete & persist transaction
-  - Move `kiosk_cart` → `transaction` + `transaction_detail`
-  - Move `kiosk_paid_pos` → `transaction_payment`
-  - Calculate: subTotal, discount, bkp, dpp, ppn, nonBkp, finalPrice
-  - Rounding (method dari `account` id=100)
-  - Update `balance` (cashIn, cashOut)
-  - Generate transaction ID: `{cashierId}.{sequence}`
-  - Update `auto_number`
-  - Clear `kiosk_cart` & `kiosk_paid_pos`
-  - Emit Socket.IO: `payment:complete`, `display:thankyou`, `cart:clear`
+- [x] `POST /api/payment/complete` — Complete & persist transaction
+  - Read from `kiosk_paid_pos`, validate paid >= finalPrice
+  - Delegate to existing `transactionService.createTransaction()` (atomic DB transaction)
+  - Moves `kiosk_cart` → `transaction` + `transaction_detail`
+  - Moves `kiosk_paid_pos` → `transaction_payment`
+  - Updates `balance` (cashIn, cashOut)
+  - Generates transaction ID via `auto_number`
+  - Clears `kiosk_cart` & `kiosk_paid_pos`
+  - Files: `payment.service.js`, `payment.controller.js`, `payment.schema.js`, `payment.routes.js`
 
 ### 7c. EDC Integration
 
@@ -164,7 +163,7 @@
 
 ## 8. Transaction History — `/api/transaction/*`
 
-- [ ] `GET /api/transaction/:id` — Get completed transaction header
+- [x] `GET /api/transactions/:id` — Get completed transaction for receipt/reprint (header + aggregated items + primary payment type)
 - [ ] `GET /api/transaction/:id/detail` — Get transaction line items
 - [ ] `GET /api/transaction/:id/payments` — Get transaction payment records
 - [ ] `POST /api/transaction/:id/reprint` — Reprint receipt

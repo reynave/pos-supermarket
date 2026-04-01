@@ -286,7 +286,92 @@ async function listTransactions(date, page, limit) {
   return { items: rows, total };
 }
 
+/**
+ * Get one completed transaction with aggregated item lines for receipt/reprint.
+ * @param {string} id
+ */
+async function getTransactionById(id) {
+  const [headerRows] = await pool.query(
+    `SELECT
+       t.id,
+       t.cashierId,
+       t.terminalId,
+       t.subTotal AS subtotal,
+       t.ppn AS tax,
+       t.discount,
+       t.total AS grandTotal,
+       t.transaction_date AS inputDate
+     FROM \`transaction\` t
+     WHERE t.id = ?
+       AND t.presence = 1
+     LIMIT 1`,
+    [id],
+  );
+
+  const transaction = headerRows[0] || null;
+  if (!transaction) return null;
+
+  const [itemRows] = await pool.query(
+    `SELECT
+       MIN(td.id) AS lineId,
+       td.itemId,
+       COALESCE(MAX(i.description), td.itemId) AS name,
+       COALESCE(MAX(td.barcode), td.itemId) AS barcode,
+       COUNT(*) AS qty,
+       ROUND(AVG(td.price), 2) AS price,
+       ROUND(SUM(td.discount), 2) AS discount,
+       0 AS tax,
+       ROUND(SUM(td.price - td.discount), 2) AS total,
+       COALESCE(MAX(iu.name), 'PCS') AS uom
+     FROM transaction_detail td
+     LEFT JOIN item i ON i.id = td.itemId
+     LEFT JOIN item_uom iu ON iu.id = i.itemUomId
+     WHERE td.transactionId = ?
+       AND td.presence = 1
+     GROUP BY td.itemId
+     ORDER BY MIN(td.id) ASC`,
+    [id],
+  );
+
+  const items = itemRows.map((r) => ({
+    id: String(r.lineId),
+    itemId: r.itemId,
+    name: r.name,
+    barcode: r.barcode,
+    qty: Number(r.qty || 0),
+    price: Number(r.price || 0),
+    discount: Number(r.discount || 0),
+    tax: Number(r.tax || 0),
+    total: Number(r.total || 0),
+    uom: r.uom || 'PCS',
+  }));
+
+  const [paymentRows] = await pool.query(
+    `SELECT paymentTypeId, amount
+     FROM transaction_payment
+     WHERE transactionId = ?
+       AND presence = 1
+       AND paymentTypeId NOT IN ('DISC.BILL')
+     ORDER BY amount DESC, id ASC
+     LIMIT 1`,
+    [id],
+  );
+
+  const primaryPaymentTypeId = paymentRows[0]?.paymentTypeId || 'CASH';
+
+  return {
+    transaction: {
+      ...transaction,
+      cashierName: transaction.cashierId,
+      status: 1,
+    },
+    items,
+    primaryPaymentTypeId,
+  };
+}
+
 module.exports = {
   createTransaction,
   listTransactions,
+  getTransactionById,
 };
