@@ -8,13 +8,20 @@ const paymentSchema = z.object({
 });
 
 const createTransactionSchema = z.object({
-  body: z.object({
-    kioskUuid: z.string().min(1, 'kioskUuid is required'),
-    terminalId: z.string().min(1, 'terminalId is required'),
-    settlementId: z.string().min(1, 'settlementId is required'),
-    payments: z.array(paymentSchema).min(1, 'At least one payment is required'),
-    cashReceived: z.number().optional(),
-  }),
+  kioskUuid: z.string().min(1, 'kioskUuid is required'),
+  terminalId: z.string().min(1, 'terminalId is required'),
+  resetId: z.string().optional(),
+  settlementId: z.string().optional(),
+  payments: z.array(paymentSchema).min(1, 'At least one payment is required'),
+  cashReceived: z.number().optional(),
+}).superRefine((body, ctx) => {
+  if (!body.resetId && !body.settlementId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'resetId is required',
+      path: ['resetId'],
+    });
+  }
 });
 
 module.exports = {

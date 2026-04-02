@@ -1,0 +1,25 @@
+CREATE TABLE `cash_declaration` (
+	`id` INT(11) NOT NULL AUTO_INCREMENT,
+	`resetId` VARCHAR(250) NULL DEFAULT NULL COLLATE 'utf8mb4_general_ci',
+	`userId` VARCHAR(50) NULL DEFAULT NULL COLLATE 'utf8mb4_general_ci',
+	`denom_100k` INT(11) NOT NULL DEFAULT '0',
+	`denom_50k` INT(11) NOT NULL DEFAULT '0',
+	`denom_20k` INT(11) NOT NULL DEFAULT '0',
+	`denom_10k` INT(11) NOT NULL DEFAULT '0',
+	`denom_5k` INT(11) NOT NULL DEFAULT '0',
+	`denom_2k` INT(11) NOT NULL DEFAULT '0',
+	`denom_1k` INT(11) NOT NULL DEFAULT '0',
+	`coins_other` INT(11) NOT NULL DEFAULT '0',
+	`note` TEXT NOT NULL COLLATE 'utf8mb4_general_ci',
+	`status` INT(11) NOT NULL DEFAULT '0',
+	`presence` INT(11) NOT NULL DEFAULT '1',
+	`inputBy` INT(11) NULL DEFAULT NULL,
+	`inputDate` DATETIME NULL DEFAULT NULL,
+	`updateDate` DATETIME NULL DEFAULT NULL,
+	`updateBy` INT(11) NULL DEFAULT NULL,
+	PRIMARY KEY (`id`) USING BTREE
+)
+COLLATE='utf8mb4_general_ci'
+ENGINE=InnoDB
+AUTO_INCREMENT=2
+;

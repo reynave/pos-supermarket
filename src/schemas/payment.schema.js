@@ -18,8 +18,17 @@ const removePaymentSchema = z.object({
 const completePaymentSchema = z.object({
   kioskUuid: z.string().min(1, 'kioskUuid is required'),
   terminalId: z.string().optional(),
-  settlementId: z.string().min(1, 'settlementId is required'),
+  resetId: z.string().optional(),
+  settlementId: z.string().optional(),
   cashReceived: z.number().optional(),
+}).superRefine((body, ctx) => {
+  if (!body.resetId && !body.settlementId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'resetId is required',
+      path: ['resetId'],
+    });
+  }
 });
 
 module.exports = { addPaymentSchema, removePaymentSchema, completePaymentSchema };

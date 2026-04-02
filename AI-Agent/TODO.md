@@ -1,7 +1,14 @@
 # POS Supermarket — REST API TODO
 
 > Backend only (`pos-supermarket/`). Tidak termasuk Angular frontend.
-> Referensi lengkap: [AGENT.md](./AGENT.md) | Database: [table-ver2025.sql](./table-ver2025.sql)
+> Referensi lengkap: [AGENT.md](./AGENT.md) | Database terbaru: [table-ver2026.sql](./table-ver2026.sql)
+
+## Update Snapshot (2026-04-02)
+
+- Cart core sudah berjalan dengan naming endpoint baru: `POST /api/cart/new`, `GET /api/cart/list/:kioskUuid`, `POST /api/cart/void/:kioskUuid`, `POST /api/cart/voidItem/:kioskUuid`.
+- Scan/add item berjalan di namespace item: `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`.
+- Daily close dedicated endpoint aktif: `GET/POST /api/daily-close/:resetId` dan report/history.
+- Session harian runtime menggunakan `resetId` (alias kompatibilitas `settlementId` masih dipertahankan di beberapa endpoint).
 
 ---
 
@@ -39,12 +46,14 @@
 
 ---
 
-## 3. Item / Barcode Lookup — `GET /api/item/*` (F2)
+## 3. Item / Barcode Lookup — `/api/item/*` (F2)
 
-- [x] `GET /api/item/barcode/:barcode` — Lookup item by barcode scan
+- [~] `GET /api/item/barcode/:barcode` — Lookup item by barcode scan
+  - [x] Runtime implemented as `POST /api/item/barcode` (body: `kioskUuid`, `barcode`)
   - Query `item_barcode` → get `itemId` → fetch from `item`
   - Return: item detail + price + promotion info (jika ada)
-- [x] `GET /api/item/:id` — Get item by article/SKU ID
+- [~] `GET /api/item/:id` — Get item by article/SKU ID
+  - [x] Runtime implemented as `POST /api/item/add` (body: `kioskUuid`, `itemId`)
 - [x] `GET /api/item/search?q=` — Search items by description (LIKE query)
 - [x] Item service: findByBarcode, findById, searchByDescription
 - [x] Item schema: Zod validation
@@ -53,30 +62,42 @@
 
 ## 4. Cart / Active Transaction — `/api/cart/*` (F2)
 
-- [ ] `POST /api/cart/start` — Start new transaction
+- [~] `POST /api/cart/start` — Start new transaction
+  - [x] Implemented as `POST /api/cart/new` (naming baru)
   - Generate `kioskUuid` format: `{terminalId}.{YYMMDD}.{sequence}`
-  - Insert ke `kiosk_uuid`
-  - Auto-increment `auto_number` (id=302 untuk pos)
-- [ ] `POST /api/cart/scan` — Scan barcode & add item to cart
+  - [x] Insert ke `kiosk_uuid`
+  - [x] Auto-increment `auto_number` (id=302 untuk pos)
+- [~] `POST /api/cart/scan` — Scan barcode & add item to cart
+  - [x] Implemented via `POST /api/item/barcode` (+ `POST /api/item/add`)
   - Lookup barcode → item
-  - Check active promotions (semua tipe promo)
-  - Calculate price after discount
-  - Insert ke `kiosk_cart`
-  - Handle free item → `kiosk_cart_free_item`
-  - Emit Socket.IO `cart:update`
-- [ ] `GET /api/cart/:kioskUuid` — Get current cart items & totals
-- [ ] `PUT /api/cart/item/:id` — Update cart item (qty, price edit, void)
+  - [ ] Check active promotions (semua tipe promo)
+  - [ ] Calculate price after discount
+  - [x] Insert ke `kiosk_cart`
+  - [ ] Handle free item → `kiosk_cart_free_item`
+  - [ ] Emit Socket.IO `cart:update`
+- [x] `GET /api/cart/:kioskUuid` — Get current cart session info
+- [x] `GET /api/cart/list/:kioskUuid` — Get current cart items & totals
+- [~] `PUT /api/cart/item/:id` — Update cart item (qty, price edit, void)
+  - [x] Partial: void item implemented via `POST /api/cart/voidItem/:kioskUuid`
+  - [x] Partial: add qty implemented via `POST /api/item/add-qty`
+  - [ ] Price edit belum ada endpoint khusus
   - Void item perlu supervisor auth (cek `user_func`)
-- [ ] `DELETE /api/cart/item/:id` — Remove/void item from cart
+- [~] `DELETE /api/cart/item/:id` — Remove/void item from cart
+  - [x] Partial: implemented as `POST /api/cart/voidItem/:kioskUuid`
 - [ ] `PUT /api/cart/:kioskUuid/member` — Attach member to transaction
   - Lookup `member` by ID
   - Apply member discount (dari `account` id=99)
   - Recalculate semua item discount
   - Emit Socket.IO `member:attached`
-- [ ] `DELETE /api/cart/:kioskUuid` — Cancel/clear entire cart
+- [x] `DELETE /api/cart/:kioskUuid` — Cancel/clear entire cart
+  - [x] Implemented as `POST /api/cart/void/:kioskUuid` (PIN verification + clear)
   - Emit Socket.IO `cart:clear`
-- [ ] Cart service: createKioskUuid, addToCart, getCart, updateItem, voidItem, attachMember, clearCart
-- [ ] Cart schema: Zod validation (scanSchema, updateItemSchema, dll)
+- [~] Cart service: createKioskUuid, addToCart, getCart, updateItem, voidItem, attachMember, clearCart
+  - [x] createKioskUuid, getCart, voidItem, clearCart
+  - [ ] updateItem generic, attachMember
+- [~] Cart schema: Zod validation (scanSchema, updateItemSchema, dll)
+  - [x] create cart schema tersedia
+  - [ ] schema update/attach member/void item belum distandardisasi penuh
 
 ---
 
@@ -126,6 +147,8 @@
   - Moves `kiosk_cart` → `transaction` + `transaction_detail`
   - Moves `kiosk_paid_pos` → `transaction_payment`
   - Updates `balance` (cashIn, cashOut)
+  - [x] `transaction.resetId` now filled from active daily session (`reset.id`)
+  - [x] `transaction.settlementId` no longer required from request payload
   - Generates transaction ID via `auto_number`
   - Clears `kiosk_cart` & `kiosk_paid_pos`
   - Files: `payment.service.js`, `payment.controller.js`, `payment.schema.js`, `payment.routes.js`
@@ -155,8 +178,8 @@
 
 ### 7f. Payment Services & Schemas
 
-- [ ] Payment service: getTypes, addPayment, removePayment, finalizeTransaction
-- [ ] Payment schema: Zod validation (addPaymentSchema, finalizeSchema)
+- [x] Payment service: getTypes, addPayment, removePayment, finalizeTransaction
+- [x] Payment schema: Zod validation (addPaymentSchema, finalizeSchema)
 - [ ] Tax calculation helper: calculateTax(items, taxcodeConfig)
 
 ---
@@ -193,22 +216,32 @@
 
 ## 10. Daily Operations — `/api/daily/*` (F5)
 
-- [ ] `POST /api/daily/open` — Daily start / opening
-  - Create `settlement` record (generate ID: `{terminalId}SET{seq}`)
-  - Record opening balance di `balance` (transactionId='_S1')
-  - Update `auto_number` (id=301 untuk settlement)
-- [ ] `POST /api/daily/close` — Daily close / settlement / Z-Report
-  - Calculate summary: totalNumberOfCheck, summaryTotalVoid, overalitemSales, overalDiscount, overalNetSales, overalFinalPrice, overalTax
-  - Insert `reset` record
-  - Insert `reset_payment` breakdown per payment type
-  - Close `settlement` record
-  - Generate reset ID dari `auto_number` (id=220)
+- [~] `POST /api/shift/open` — Daily start / opening (current active endpoint)
+  - [x] Generate `reset.id` via `auto_number` id=220
+  - [x] Insert `reset` row for daily-start (`startDate`, `userIdStart`, `storeOutlesId`)
+  - [x] Record opening balance di `balance` (`cashIn`) dengan `transactionId = resetId`
+  - [x] Keep session active via `reset.endDate IS NULL`
+- [~] `POST /api/shift/close/:resetId` — Daily close / EOD update
+  - [x] Calculate summary: `totalTransaction`, `summaryTotalVoid`, `summaryTotalTransaction`, `summaryTotalCart`, `overalitemSales`, `overalDiscount`, `overalNetSales`, `overalFinalPrice`, `overalTax`
+  - [x] Update existing `reset` row (daily-close fields: `endDate`, `userIdClose`, totals, note)
+  - [x] Insert `reset_payment` breakdown per payment type
+  - [x] `settlement` table flow is bypassed for POS runtime (reserved for ERP sync)
+- [x] `GET /api/daily-close/:resetId` — Daily close summary endpoint (dedicated controller)
+- [x] `POST /api/daily-close/:resetId` — Submit daily close
+  - [x] Backfill `transaction.resetId` untuk transaksi yang masih kosong (by terminal + startDate)
+  - [x] Recalculate dan update seluruh field agregat di `reset` dari `transaction`
+  - [x] Close `balance` rows terkait sesi/reset
+- [x] `GET /api/daily-close/report/:resetId` — Daily close report data
 - [ ] `GET /api/daily/balance` — Get current cash balance
   - Sum `balance` where close=0
 - [ ] `POST /api/daily/cash-drawer` — Trigger cash drawer open
   - ESC/POS command to thermal printer DK port
   - May require supervisor auth
 - [ ] Daily service: openDay, closeDay, getBalance, openCashDrawer
+
+- [x] `GET /api/manual-cash/summary/:terminalId?` — Get active session and current cash balance for manual cash-in screen
+- [x] `POST /api/manual-cash/add` — Add manual cash in (insert `balance.cashIn` on active reset)
+- [x] `POST /api/manual-cash/open-drawer` — Open cash drawer command endpoint (placeholder response for hardware integration)
 
 ---
 
@@ -246,7 +279,7 @@
 - [ ] Emit `display:welcome` — idle / new transaction
 - [ ] Emit `display:thankyou` — setelah payment selesai
 - [ ] Emit `display:message` — custom message
-- [ ] Listen `terminal:register` — [x] sudah ada
+- [x] Listen `terminal:register`
 - [ ] Listen `terminal:heartbeat` — keep-alive
 
 ---
@@ -260,12 +293,37 @@
 
 ## 15. Auto Number Generator
 
-- [ ] Utility: generateAutoNumber(name) — generic auto-increment helper
+- [~] Utility: generateAutoNumber(name) — generic auto-increment helper
+  - [x] Partial: sudah ada implementasi spesifik di service (`auto_number` id=200/220/302)
+  - [ ] Belum dijadikan helper generik reusable lintas modul
   - Read current `runningNumber` dari `auto_number`
   - Increment + pad with `digit`
   - Prepend `prefix`
   - Update `runningNumber` dan `updateDate`
   - Used by: transaction, kiosk, settlement, reset, refund, exchange
+
+---
+
+## Fitur Wajib Ditambah (Rekomendasi AI)
+
+### A. Security & Data Integrity (High Priority)
+
+- [ ] Migrasi hash login/pin dari MD5 ke bcrypt + strategi backward-compatible migration saat login.
+- [ ] Hardening SQL query raw (hindari string interpolation), terutama validasi PIN.
+- [ ] Idempotency key untuk `POST /api/payment/complete` agar tidak double-post saat jaringan tidak stabil.
+- [ ] Standardisasi permission check supervisor (`user_func`) untuk void/reprint/refund di semua endpoint sensitif.
+
+### B. Operasional POS (High Priority)
+
+- [ ] Endpoint `GET /api/daily/balance` agar screen cash balance tidak tergantung kalkulasi lokal.
+- [ ] Integrasi real hardware cash drawer + printer status (bukan placeholder) dan fallback aman jika device offline.
+- [ ] Endpoint transaksi detail/pembayaran (`/detail`, `/payments`) untuk audit yang lengkap.
+
+### C. Observability & Reliability (Medium Priority)
+
+- [ ] Structured logging + correlation id per request/transaction.
+- [ ] Healthcheck diperluas (`/api/health`) mencakup DB readiness + version info.
+- [ ] Contract test minimal untuk endpoint kritikal: shift open/close, cart, payment complete.
 
 ---
 

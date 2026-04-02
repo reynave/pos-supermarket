@@ -54,6 +54,25 @@ async function getCartItemsForPayment(kioskUuid, conn) {
   return rows;
 }
 
+async function getDrawerPaymentTypeIds(paymentTypeIds, conn) {
+  if (!paymentTypeIds.length) {
+    return new Set();
+  }
+
+  const placeholders = paymentTypeIds.map(() => '?').join(', ');
+  const [rows] = await conn.query(
+    `SELECT id
+     FROM payment_type
+     WHERE openCashDrawer = 1
+       AND presence = 1
+       AND status = 1
+       AND id IN (${placeholders})`,
+    paymentTypeIds,
+  );
+
+  return new Set(rows.map((row) => row.id));
+}
+
 /**
  * Create a full transaction: header + details + payments + balance.
  * All within a single DB transaction for atomicity.
@@ -62,7 +81,7 @@ async function getCartItemsForPayment(kioskUuid, conn) {
  * @param {string} params.kioskUuid
  * @param {string} params.cashierId
  * @param {string} params.terminalId
- * @param {string} params.settlementId
+ * @param {string} params.resetId
  * @param {string} params.storeOutletId
  * @param {Array}  params.payments - [{ paymentTypeId: 'CASH'|'DEBITCC'|'QRIS', amount, reference?, approvedCode? }]
  * @param {number} [params.cashReceived] - actual cash tendered (for CASH)
@@ -71,7 +90,7 @@ async function createTransaction({
   kioskUuid,
   cashierId,
   terminalId,
-  settlementId,
+  resetId,
   storeOutletId,
   payments,
   cashReceived,
@@ -92,6 +111,11 @@ async function createTransaction({
     const PPN_RATE = 11;
     const nowEpoch = Math.floor(Date.now() / 1000);
     const nowDatetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const drawerPaymentTypeIds = await getDrawerPaymentTypeIds(
+      payments.map((payment) => payment.paymentTypeId),
+      conn,
+    );
+    const drawerPayment = payments.find((payment) => drawerPaymentTypeIds.has(payment.paymentTypeId));
 
     // 3. Calculate totals from actual cart data
     let subTotal = 0;
@@ -123,26 +147,27 @@ async function createTransaction({
     // 4. INSERT transaction header
     await conn.query(
       `INSERT INTO \`transaction\`
-         (id, transactionDate, transaction_date, kioskUuid, settlementId,
+         (id, transactionDate, transaction_date, kioskUuid, resetId, settlementId,
           storeOutlesId, terminalId, struk, total, locked,
           startDate, endDate, cashierId, pthType,
           subTotal, discount, discountMember, voucher,
           bkp, dpp, ppn, nonBkp, finalPrice,
           cashDrawer, printing, presence,
           inputDate, input_date, updateDate, update_date)
-       VALUES (?, ?, ?, ?, ?,
+       VALUES (?, ?, ?, ?, ?, '',
                ?, ?, ?, ?, 1,
                '2023-01-01 00:00:00.000', ?, ?, 1,
                ?, ?, 0, 0,
                ?, ?, ?, 0, ?,
-               1, 1, 1,
+               ?, 1, 1,
                ?, ?, ?, ?)`,
       [
-        transactionId, nowEpoch, nowDatetime, kioskUuid, settlementId,
+        transactionId, nowEpoch, nowDatetime, kioskUuid, resetId || null,
         storeOutletId || 'Comingsoon', terminalId, transactionId, grandTotal,
         nowDatetime, cashierId,
         subTotal, totalDiscount,
         totalBkp, totalDpp, totalPpn, finalPrice,
+        drawerPayment ? 1 : 0,
         nowEpoch, nowDatetime, nowEpoch, nowDatetime,
       ],
     );
@@ -184,21 +209,20 @@ async function createTransaction({
     }
 
     // 7. INSERT balance row (for CASH payment — tracks physical cash flow)
-    const cashPayment = payments.find((p) => p.paymentTypeId === 'CASH');
-    if (cashPayment) {
-      const cashIn = cashReceived || cashPayment.amount;
+    if (drawerPayment) {
+      const cashIn = cashReceived || drawerPayment.amount;
       const change = Math.max(0, cashIn - grandTotal);
       const cashOut = change > 0 ? -change : 0;
 
       await conn.query(
         `INSERT INTO balance
-           (cashIn, cashOut, transactionId, kioskUuid,
+           (resetId, cashIn, cashOut, transactionId, kioskUuid,
             cashierId, terminalId, settlementId, close, input_date)
-         VALUES (?, ?, ?, ?,
-                 ?, ?, ?, 0, ?)`,
+         VALUES (?, ?, ?, ?, ?,
+                 ?, ?, '', 0, ?)` ,
         [
-          cashIn, cashOut, transactionId, kioskUuid,
-          cashierId, terminalId, settlementId, nowDatetime,
+          resetId || '', cashIn, cashOut, transactionId, kioskUuid,
+          cashierId, terminalId, nowDatetime,
         ],
       );
     }

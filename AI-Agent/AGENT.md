@@ -2,6 +2,34 @@
 
 > This document describes the full concept, business logic, database schema, and technical architecture of the POS (Point of Sale) Supermarket system. It is intended as the primary context for AI agents working on this codebase.
 
+## Fast Start (Latest Verified: 2026-04-02)
+
+Gunakan bagian ini dulu agar AI agent lain cepat paham kondisi real codebase.
+
+### Current Runtime Facts
+- Backend API aktif di `src/server.js` (Express 5 + Socket.IO).
+- Daily session runtime memakai `resetId` (alias `settlementId` masih dipakai untuk backward compatibility di beberapa payload/route).
+- Flow payment aktif menggunakan `kiosk_paid_pos` lalu finalize ke `transaction`, `transaction_detail`, `transaction_payment`.
+- Frontend Angular aktif di folder terpisah `pos-supermarket-web/`.
+
+### Implemented Endpoint Snapshot (Real Route Names)
+
+| Domain | Endpoint | Status |
+|--------|----------|--------|
+| Auth | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` | Implemented |
+| Shift | `POST /api/shift/open`, `GET /api/shift/active/:terminalId`, `GET /api/shift/summary/:settlementId`, `POST /api/shift/close/:settlementId` | Implemented |
+| Daily Close | `GET /api/daily-close/history`, `GET /api/daily-close/:resetId`, `POST /api/daily-close/:resetId`, `GET /api/daily-close/report/:resetId` | Implemented |
+| Cart Session | `POST /api/cart/new`, `GET /api/cart/:kioskUuid`, `GET /api/cart/list/:kioskUuid`, `POST /api/cart/void/:kioskUuid`, `POST /api/cart/voidItem/:kioskUuid` | Implemented |
+| Item Scan/Add | `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`, `GET /api/item/search` | Implemented |
+| Payment | `GET /api/payment/types`, `GET /api/payment/pending/:kioskUuid`, `POST /api/payment/add`, `DELETE /api/payment/:id`, `POST /api/payment/complete` | Implemented |
+| Transaction | `POST /api/transactions`, `GET /api/transactions`, `GET /api/transactions/:id` | Implemented |
+| Manual Cash | `GET /api/manual-cash/summary`, `GET /api/manual-cash/summary/:terminalId`, `POST /api/manual-cash/add`, `POST /api/manual-cash/open-drawer`, `GET /api/manual-cash/history` | Implemented |
+
+### Socket.IO Snapshot
+- Implemented listener: `terminal:register`.
+- Implemented relay: `display:update` ke room terminal.
+- Event domain lain (`cart:update`, `payment:complete`, dll) belum standar penuh di backend.
+
 ---
 
 ## 1. Project Overview
@@ -232,7 +260,7 @@ Supports **multiple payment methods in a single transaction** (split payment).
 
 ## 4. Database Schema
 
-### Database Name: `pos2`
+### Database Name: `pos_supermarket` (dump 2026) / `pos2` (default env fallback)
 
 ### Table Naming Convention
 - No prefix — all tables use plain names (e.g. `item`, `transaction`, `balance`, `member`)

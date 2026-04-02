@@ -15,6 +15,8 @@ const authRoutes = require('./routes/auth.routes');
 const itemRoutes = require('./routes/item.routes');
 const cartRoutes = require('./routes/cart.routes');
 const shiftRoutes = require('./routes/shift.routes');
+const dailyCloseRoutes = require('./routes/daily-close.routes');
+const manualCashRoutes = require('./routes/manual-cash.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const paymentRoutes = require('./routes/payment.routes');
 
@@ -52,6 +54,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/item', itemRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/shift', shiftRoutes);
+app.use('/api/daily-close', dailyCloseRoutes);
+app.use('/api/manual-cash', manualCashRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payment', paymentRoutes);
 

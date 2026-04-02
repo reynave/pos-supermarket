@@ -1,32 +1,31 @@
 const pool = require('../config/database');
 
 /**
- * Generate a new settlementId using auto_number id=301.
- * Format: {terminalId}SET{padded_runningNumber}
- * e.g. T01SET000040
+ * Generate reset ID using auto_number id=220.
+ * Format follows auto_number prefix + padded running number (e.g. RST000249).
  */
-async function generateSettlementId(terminalId) {
+async function generateResetId() {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     const [rows] = await connection.query(
-      'SELECT prefix, digit, runningNumber FROM auto_number WHERE id = 301 FOR UPDATE',
+      'SELECT prefix, digit, runningNumber FROM auto_number WHERE id = 220 FOR UPDATE',
     );
-    if (!rows.length) throw new Error('auto_number id=301 not found');
+    if (!rows.length) throw new Error('auto_number id=220 not found');
 
     const { prefix, digit, runningNumber } = rows[0];
     const nextNumber = runningNumber + 1;
 
     await connection.query(
-      'UPDATE auto_number SET runningNumber = ?, updateDate = UNIX_TIMESTAMP() WHERE id = 301',
+      'UPDATE auto_number SET runningNumber = ?, updateDate = UNIX_TIMESTAMP() WHERE id = 220',
       [nextNumber],
     );
 
     await connection.commit();
 
     const padded = String(nextNumber).padStart(digit, '0');
-    return `${terminalId}${prefix}${padded}`;
+    return `${prefix || ''}${padded}`;
   } catch (err) {
     await connection.rollback();
     throw err;
@@ -36,29 +35,32 @@ async function generateSettlementId(terminalId) {
 }
 
 /**
- * Create a new settlement record and opening balance.
+ * Create a new reset row (daily start) and opening balance entry.
  */
-async function openShift({ settlementId, terminalId, cashierId, openingBalance }) {
+async function openShift({ resetId, terminalId, cashierId, storeOutletId, openingBalance }) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    // Insert settlement record
+    // Daily start inserts reset header with start metadata only.
     await connection.query(
-      `INSERT INTO settlement (id, total, amount, input_date, upload, upload_date)
-       VALUES (?, 0, 0, NOW(), 0, '2023-01-01 00:00:00')`,
-      [settlementId],
+      `INSERT INTO reset
+         (id, userIdStart, userIdClose, storeOutlesId, startDate, endDate,
+          presence, inputDate, inputBy, updateDate, updateBy)
+       VALUES (?, ?, '', ?, NOW(), NULL,
+               1, NOW(), ?, NOW(), ?)` ,
+      [resetId, cashierId, storeOutletId || null, cashierId, cashierId],
     );
 
-    // Insert opening balance row (cashIn = openingBalance, transactionId = '_S1' convention)
+    // Daily start writes opening cash to balance with transactionId = resetId.
     await connection.query(
-      `INSERT INTO balance (cashIn, cashOut, transactionId, kioskUuid, cashierId, terminalId, settlementId, close, input_date)
-       VALUES (?, 0, '_S1', '', ?, ?, ?, 0, NOW())`,
-      [openingBalance, cashierId, terminalId, settlementId],
+      `INSERT INTO balance (resetId, cashIn, cashOut, transactionId, kioskUuid, cashierId, terminalId, settlementId, close, input_date)
+       VALUES (?, ?, 0, ?, '', ?, ?, '', 0, NOW())`,
+      [resetId, openingBalance, resetId, cashierId, terminalId],
     );
 
     await connection.commit();
-    return { settlementId };
+    return { resetId };
   } catch (err) {
     await connection.rollback();
     throw err;
@@ -68,35 +70,45 @@ async function openShift({ settlementId, terminalId, cashierId, openingBalance }
 }
 
 /**
- * Check if there is an active (unclosed) settlement for this terminal.
- * An active settlement has at least one balance row with close = 0.
+ * Check if there is an active daily session.
+ * A session is active when reset.endDate is still NULL.
  */
 async function findActiveShift(terminalId) {
   const [rows] = await pool.query(
-    `SELECT b.settlementId, b.cashierId, b.cashIn AS openingBalance, b.input_date
-     FROM balance b
-     WHERE b.terminalId = ? AND b.transactionId = '_S1' AND b.close = 0
-     ORDER BY b.id DESC LIMIT 1`,
-    [terminalId],
+    `SELECT
+       r.id AS resetId,
+       r.userIdStart AS cashierId,
+       IFNULL(b.cashIn, 0) AS openingBalance,
+       r.startDate
+     FROM reset r
+    LEFT JOIN balance b ON (b.resetId = r.id OR b.transactionId = r.id) AND b.kioskUuid = ''
+     WHERE r.presence = 1
+       AND (? IS NULL OR ? = '' OR b.terminalId = ?)
+       AND (r.endDate IS NULL OR r.endDate = '2026-01-01 00:00:00')
+     ORDER BY r.startDate DESC
+     LIMIT 1`,
+    [terminalId || null, terminalId || null, terminalId || null],
   );
   return rows.length ? rows[0] : null;
 }
 
 /**
  * Get shift summary for daily close.
- * Aggregates transactions and payments for the given settlementId.
+ * Aggregates transactions and payments for the given resetId.
  */
-async function getShiftSummary(settlementId) {
+async function getShiftSummary(resetId) {
   // Transaction totals
   const [txRows] = await pool.query(
     `SELECT COUNT(*) AS transactionCount,
             IFNULL(SUM(total), 0) AS totalSales,
             IFNULL(SUM(discount), 0) AS totalDiscount,
             IFNULL(SUM(ppn), 0) AS totalTax,
-            IFNULL(SUM(finalPrice), 0) AS totalFinalPrice
+            IFNULL(SUM(finalPrice), 0) AS totalFinalPrice,
+            IFNULL(SUM(CASE WHEN total < 0 THEN 1 ELSE 0 END), 0) AS summaryTotalVoid,
+            IFNULL(SUM(subTotal), 0) AS summaryTotalCart
      FROM transaction
-     WHERE settlementId = ? AND presence = 1`,
-    [settlementId],
+     WHERE resetId = ? AND presence = 1`,
+    [resetId],
   );
 
   // Payment breakdown
@@ -106,17 +118,18 @@ async function getShiftSummary(settlementId) {
             IFNULL(SUM(tp.amount), 0) AS totalAmount
      FROM transaction_payment tp
      JOIN transaction t ON tp.transactionId = t.id
-     WHERE t.settlementId = ? AND t.presence = 1 AND tp.presence = 1
+     WHERE t.resetId = ? AND t.presence = 1 AND tp.presence = 1
      GROUP BY tp.paymentTypeId`,
-    [settlementId],
+    [resetId],
   );
 
   // Opening balance
   const [balRows] = await pool.query(
     `SELECT cashIn AS openingBalance FROM balance
-     WHERE settlementId = ? AND transactionId = '_S1'
+     WHERE (resetId = ? OR transactionId = ?)
+       AND kioskUuid = ''
      LIMIT 1`,
-    [settlementId],
+    [resetId, resetId],
   );
 
   return {
@@ -127,37 +140,101 @@ async function getShiftSummary(settlementId) {
 }
 
 /**
- * Close the shift: mark all balance rows as closed, update settlement totals.
+ * Close the shift: update reset daily close fields and mark related balances as closed.
  */
-async function closeShift(settlementId) {
+async function closeShift(resetId, userIdClose, note) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
-    // Get summary for updating settlement
+    // Get summary for daily close fields.
     const [txRows] = await connection.query(
-      `SELECT COUNT(*) AS total, IFNULL(SUM(finalPrice), 0) AS amount
+      `SELECT
+         COUNT(*) AS totalTransaction,
+         IFNULL(SUM(CASE WHEN total < 0 THEN 1 ELSE 0 END), 0) AS summaryTotalVoid,
+         IFNULL(SUM(total), 0) AS summaryTotalTransaction,
+         IFNULL(SUM(subTotal), 0) AS summaryTotalCart,
+         IFNULL(SUM(subTotal), 0) AS overalitemSales,
+         IFNULL(SUM(discount), 0) AS overalDiscount,
+         IFNULL(SUM(subTotal - discount), 0) AS overalNetSales,
+         IFNULL(SUM(finalPrice), 0) AS overalFinalPrice,
+         IFNULL(SUM(ppn), 0) AS overalTax
        FROM transaction
-       WHERE settlementId = ? AND presence = 1`,
-      [settlementId],
+       WHERE resetId = ? AND presence = 1`,
+      [resetId],
     );
 
-    const { total, amount } = txRows[0] || { total: 0, amount: 0 };
+    const summary = txRows[0] || {
+      totalTransaction: 0,
+      summaryTotalVoid: 0,
+      summaryTotalTransaction: 0,
+      summaryTotalCart: 0,
+      overalitemSales: 0,
+      overalDiscount: 0,
+      overalNetSales: 0,
+      overalFinalPrice: 0,
+      overalTax: 0,
+    };
 
-    // Update settlement record
+    // Daily close updates remaining reset fields.
     await connection.query(
-      'UPDATE settlement SET total = ?, amount = ?, input_date = NOW() WHERE id = ?',
-      [total, amount, settlementId],
+      `UPDATE reset
+       SET userIdClose = ?,
+           endDate = NOW(),
+           totalTransaction = ?,
+           summaryTotalVoid = ?,
+           summaryTotalTransaction = ?,
+           summaryTotalCart = ?,
+           overalitemSales = ?,
+           overalDiscount = ?,
+           overalNetSales = ?,
+           overalFinalPrice = ?,
+           overalTax = ?,
+           note = ?,
+           updateDate = NOW(),
+           updateBy = ?
+       WHERE id = ?`,
+      [
+        userIdClose,
+        summary.totalTransaction,
+        summary.summaryTotalVoid,
+        summary.summaryTotalTransaction,
+        summary.summaryTotalCart,
+        summary.overalitemSales,
+        summary.overalDiscount,
+        summary.overalNetSales,
+        summary.overalFinalPrice,
+        summary.overalTax,
+        note || null,
+        userIdClose,
+        resetId,
+      ],
     );
 
-    // Mark all balance rows for this settlement as closed
+    // Mark opening balance row as closed.
     await connection.query(
-      'UPDATE balance SET close = 1 WHERE settlementId = ? AND close = 0',
-      [settlementId],
+      'UPDATE balance SET close = 1 WHERE resetId = ? AND transactionId = ? AND close = 0',
+      [resetId, resetId],
+    );
+
+    // Mark all transaction cash movements of this reset as closed.
+    await connection.query(
+      `UPDATE balance
+       SET close = 1
+       WHERE close = 0
+         AND resetId = ?
+         AND transactionId IN (
+           SELECT id FROM transaction WHERE resetId = ? AND presence = 1
+         )`,
+      [resetId, resetId],
     );
 
     await connection.commit();
-    return { settlementId, transactionCount: total, totalAmount: amount };
+    return {
+      resetId,
+      transactionCount: summary.totalTransaction,
+      totalAmount: summary.overalFinalPrice,
+    };
   } catch (err) {
     await connection.rollback();
     throw err;
@@ -167,7 +244,7 @@ async function closeShift(settlementId) {
 }
 
 module.exports = {
-  generateSettlementId,
+  generateResetId,
   openShift,
   findActiveShift,
   getShiftSummary,

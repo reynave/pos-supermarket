@@ -5,11 +5,11 @@ const { success, error } = require('../utils/response');
 /**
  * POST /api/transactions
  * Create a transaction from the current kiosk cart.
- * Body: { kioskUuid, terminalId, settlementId, payments: [{ paymentTypeId, amount, reference? }], cashReceived? }
+ * Body: { kioskUuid, terminalId, resetId?, settlementId?, payments: [{ paymentTypeId, amount, reference? }], cashReceived? }
  */
 async function createTransaction(req, res, next) {
   try {
-    const { kioskUuid, terminalId, settlementId, payments, cashReceived } = req.body;
+    const { kioskUuid, terminalId, resetId, settlementId, payments, cashReceived } = req.body;
 
     // Verify cart session exists and is active
     const session = await cartService.findByKioskUuid(kioskUuid);
@@ -24,7 +24,7 @@ async function createTransaction(req, res, next) {
       kioskUuid,
       cashierId,
       terminalId,
-      settlementId,
+      resetId: resetId || settlementId || null,
       storeOutletId,
       payments,
       cashReceived,

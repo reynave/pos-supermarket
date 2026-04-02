@@ -88,11 +88,11 @@ async function removePayment(req, res, next) {
 /**
  * POST /api/payment/complete
  * Finalize payment: validate total paid >= grand total, then create transaction.
- * Body: { kioskUuid, terminalId, settlementId, cashReceived? }
+ * Body: { kioskUuid, terminalId, resetId?, settlementId?, cashReceived? }
  */
 async function completePayment(req, res, next) {
   try {
-    const { kioskUuid, terminalId, settlementId, cashReceived } = req.body;
+    const { kioskUuid, terminalId, resetId, settlementId, cashReceived } = req.body;
 
     // Validate kiosk session
     const kiosk = await itemService.findKioskUuid(kioskUuid);
@@ -114,7 +114,7 @@ async function completePayment(req, res, next) {
       kioskUuid,
       cashierId: kiosk.cashierId,
       terminalId: terminalId || kiosk.terminalId,
-      settlementId,
+      resetId: resetId || settlementId || null,
       storeOutletId: kiosk.storeOutlesId,
       payments,
       cashReceived: cashReceived ? Number(cashReceived) : undefined,
