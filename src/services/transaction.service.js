@@ -1,4 +1,63 @@
 const pool = require('../config/database');
+const fs = require('fs/promises');
+const path = require('path');
+const Handlebars = require('handlebars');
+
+const TEMPLATE_DIR = path.join(__dirname, '..', '..', 'public', 'template');
+
+Handlebars.registerHelper('currencyIdr', (value) => {
+  const amount = Number(value || 0);
+  return new Intl.NumberFormat('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+});
+
+Handlebars.registerHelper('formatLine', (leftText, rightText, width = 48) => {
+  const left = String(leftText || '');
+  const right = String(rightText || '');
+  const lineWidth = Number(width) || 48;
+  const space = Math.max(1, lineWidth - left.length - right.length);
+
+  return left + ' '.repeat(space) + right;
+});
+
+Handlebars.registerHelper('formatItemLeft', (qty, name) => {
+  return `${qty || 0} x ${String(name || '')}`.trim();
+});
+
+Handlebars.registerHelper('formatDateTime', (value) => {
+  if (!value) {
+    return '';
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+});
+
+function normalizeTemplateName(templateName) {
+  const fileName = path.basename(templateName || 'bill.hbs');
+  return fileName.endsWith('.hbs') ? fileName : `${fileName}.hbs`;
+}
+
+async function renderReceiptTemplate(payload, templateName = 'bill.hbs') {
+  const safeTemplateName = normalizeTemplateName(templateName);
+  const templatePath = path.join(TEMPLATE_DIR, safeTemplateName);
+  const source = await fs.readFile(templatePath, 'utf8');
+  const template = Handlebars.compile(source);
+  return template(payload);
+}
 
 /**
  * Generate a new transaction ID using auto_number id=200.
@@ -261,7 +320,8 @@ async function createTransaction({
  * @param {number} page - 1-based page number
  * @param {number} limit - items per page
  */
-async function listTransactions(date, page, limit) {
+async function listTransactions(date, page, limit, options = {}) {
+  const { includeReceiptHtml = false, templateName = 'bill.hbs' } = options;
   const offset = (page - 1) * limit;
 
   // Count total for the date
@@ -307,14 +367,33 @@ async function listTransactions(date, page, limit) {
     [date, limit, offset],
   );
 
-  return { items: rows, total };
+  if (!includeReceiptHtml) {
+    return { items: rows, total };
+  }
+
+  const itemsWithReceipt = await Promise.all(
+    rows.map(async (row) => {
+      const detail = await getTransactionById(row.id, {
+        includeReceiptHtml: true,
+        templateName,
+      });
+
+      return {
+        ...row,
+        receiptHtml: detail?.receiptHtml || '',
+      };
+    }),
+  );
+
+  return { items: itemsWithReceipt, total };
 }
 
 /**
  * Get one completed transaction with aggregated item lines for receipt/reprint.
  * @param {string} id
  */
-async function getTransactionById(id) {
+async function getTransactionById(id, options = {}) {
+  const { includeReceiptHtml = false, templateName = 'bill.hbs' } = options;
   const [headerRows] = await pool.query(
     `SELECT
        t.id,
@@ -371,27 +450,51 @@ async function getTransactionById(id) {
   }));
 
   const [paymentRows] = await pool.query(
-    `SELECT paymentTypeId, amount
-     FROM transaction_payment
-     WHERE transactionId = ?
-       AND presence = 1
-       AND paymentTypeId NOT IN ('DISC.BILL')
-     ORDER BY amount DESC, id ASC
-     LIMIT 1`,
+    `SELECT
+       tp.id,
+       tp.paymentTypeId,
+       COALESCE(pt.label, tp.paymentTypeId) AS paymentLabel,
+       COALESCE(pt.name, tp.paymentTypeId) AS paymentName,
+       ROUND(tp.amount, 2) AS amount,
+       tp.refCode AS reference,
+       tp.approvedCode
+     FROM transaction_payment tp
+     LEFT JOIN payment_type pt ON pt.id = tp.paymentTypeId
+     WHERE tp.transactionId = ?
+       AND tp.presence = 1
+       AND tp.paymentTypeId NOT IN ('DISC.BILL')
+     ORDER BY tp.amount DESC, tp.id ASC`,
     [id],
   );
 
-  const primaryPaymentTypeId = paymentRows[0]?.paymentTypeId || 'CASH';
+  const paymentMethods = paymentRows.map((row) => ({
+    id: Number(row.id),
+    paymentTypeId: row.paymentTypeId,
+    paymentLabel: row.paymentLabel,
+    paymentName: row.paymentName,
+    amount: Number(row.amount || 0),
+    reference: row.reference || '',
+    approvedCode: row.approvedCode || '',
+  }));
 
-  return {
+  const primaryPaymentTypeId = paymentMethods[0]?.paymentTypeId || 'CASH';
+
+  const result = {
     transaction: {
       ...transaction,
       cashierName: transaction.cashierId,
       status: 1,
     },
     items,
+    paymentMethods,
     primaryPaymentTypeId,
   };
+
+  if (includeReceiptHtml) {
+    result.receiptHtml = await renderReceiptTemplate(result, templateName);
+  }
+
+  return result;
 }
 
 module.exports = {

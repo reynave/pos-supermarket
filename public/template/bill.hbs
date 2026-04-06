@@ -1,0 +1,20 @@
+SUPERMARKET POS
+----------------------------------
+{{formatDateTime transaction.inputDate}}/{{transaction.id}}/{{transaction.terminalId}}/{{transaction.cashierName}}
+----------------------------------
+{{#each items}}
+{{formatLine (formatItemLeft this.qty this.name) (currencyIdr this.total) 40}}
+{{/each}}
+----------------------------------
+{{formatLine "Subtotal " (currencyIdr transaction.subtotal) 34}}
+{{formatLine "Tax " (currencyIdr transaction.tax) 34}}
+{{formatLine "Total " (currencyIdr transaction.grandTotal) 34}}
+
+Methode Pembayaran:
+{{#each paymentMethods}}
+{{formatLine this.paymentTypeId (currencyIdr this.amount) 34}}
+{{else}}
+{{formatLine "Payment " primaryPaymentTypeId 34}}
+{{/each}}
+----------------------------------
+Thank you for shopping with us!

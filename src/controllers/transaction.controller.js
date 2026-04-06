@@ -42,7 +42,7 @@ async function createTransaction(req, res, next) {
  */
 async function listTransactions(req, res, next) {
   try {
-    const { date, page = '1', limit = '20' } = req.query;
+    const { date, page = '1', limit = '20', renderReceiptHtml = 'false', template = 'bill.hbs' } = req.query;
 
     if (!date) {
       return error(res, 'date query parameter is required', 400);
@@ -52,6 +52,10 @@ async function listTransactions(req, res, next) {
       date,
       parseInt(page, 10) || 1,
       parseInt(limit, 10) || 20,
+      {
+        includeReceiptHtml: String(renderReceiptHtml).toLowerCase() === 'true',
+        templateName: template,
+      },
     );
 
     return success(res, result);
@@ -67,7 +71,11 @@ async function listTransactions(req, res, next) {
 async function getTransactionById(req, res, next) {
   try {
     const { id } = req.params;
-    const result = await transactionService.getTransactionById(id);
+    const { renderReceiptHtml = 'true', template = 'bill.hbs' } = req.query;
+    const result = await transactionService.getTransactionById(id, {
+      includeReceiptHtml: String(renderReceiptHtml).toLowerCase() === 'true',
+      templateName: template,
+    });
 
     if (!result) {
       return error(res, 'Transaction not found', 404);
@@ -79,8 +87,34 @@ async function getTransactionById(req, res, next) {
   }
 }
 
+/**
+ * GET /api/transactions/:id/print-txt?template=bill.hbs
+ * Get rendered receipt template as plain text for printer channel.
+ */
+async function getTransactionPrintText(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { template = 'bill.hbs' } = req.query;
+
+    const result = await transactionService.getTransactionById(id, {
+      includeReceiptHtml: true,
+      templateName: template,
+    });
+
+    if (!result) {
+      return error(res, 'Transaction not found', 404);
+    }
+
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.status(200).send(result.receiptHtml || '');
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   createTransaction,
   listTransactions,
   getTransactionById,
+  getTransactionPrintText,
 };

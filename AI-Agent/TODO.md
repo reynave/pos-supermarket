@@ -9,6 +9,128 @@
 - Scan/add item berjalan di namespace item: `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`.
 - Daily close dedicated endpoint aktif: `GET/POST /api/daily-close/:resetId` dan report/history.
 - Session harian runtime menggunakan `resetId` (alias kompatibilitas `settlementId` masih dipertahankan di beberapa endpoint).
+- Receipt preview support: `GET /api/transactions/:id` dapat mengembalikan `receiptHtml` hasil render template Handlebars dari `public/template/*.hbs` (default `bill.hbs`, query: `renderReceiptHtml=true&template=`).
+
+---
+
+## Sprint Plan 1 Minggu (Execution-Ready)
+
+Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional harian.
+
+### Target Outcome Sprint (End of Week)
+
+- Finalisasi pembayaran aman dari double-submit / duplicate transaksi.
+- API saldo kas harian tersedia dan konsisten dengan data operasional.
+- Data audit transaksi (detail item + payment breakdown) tersedia untuk recheck/reprint.
+- Gap keamanan SQL raw kritikal ditutup.
+- Test kontrak minimal untuk endpoint paling kritikal tersedia.
+
+### Item Sprint (Prioritas + Detail Eksekusi)
+
+#### SP1-01 (P0) Idempotency & Race Guard untuk Payment Complete
+
+- [ ] Status: Not Started
+- Scope:
+  - Tambah mekanisme idempotency key di `POST /api/payment/complete`.
+  - Cegah duplicate finalize saat request di-retry atau tombol dibuka berulang.
+  - Tambah lock/guard pada fase baca `kiosk_paid_pos` -> tulis `transaction*`.
+- Output teknis:
+  - Skema penyimpanan key (header/body) + lifecycle TTL/cleanup.
+  - Response konsisten untuk repeated request dengan key sama.
+  - Log event idempotent hit/miss.
+- Definition of Done:
+  - Request sama (key sama) tidak membuat transaksi kedua.
+  - Beban test paralel tidak menghasilkan duplicate transaction ID.
+  - Dokumentasi kontrak request-response idempotency tersedia.
+- Dependency:
+  - `payment.controller.js`, `payment.service.js`, `transaction.service.js`.
+- Risiko:
+  - Jika lock tidak tepat, bisa menambah latency atau deadlock.
+
+#### SP1-02 (P0) Endpoint Daily Balance Operasional
+
+- [ ] Status: Not Started
+- Scope:
+  - Implement `GET /api/daily/balance` by `terminalId` + active `resetId`.
+  - Formula saldo harus sama dengan penggunaan layar cash balance.
+- Output teknis:
+  - Payload saldo ringkas + komponen pembentuk (opening, cashIn, cashOut, net).
+  - Filter query untuk sesi aktif dan fallback jika tidak ada sesi.
+- Definition of Done:
+  - Nilai saldo API sama dengan query manual DB untuk sampel data hari itu.
+  - Endpoint aman dipakai frontend tanpa kalkulasi lokal tambahan.
+- Dependency:
+  - Tabel `balance`, `reset`, endpoint `shift/active` atau lookup active reset.
+- Risiko:
+  - Perbedaan interpretasi opening/manual cash in bila rule belum disepakati.
+
+#### SP1-03 (P0) Audit Endpoint Transaction Detail & Payments
+
+- [ ] Status: Not Started
+- Scope:
+  - Tambah `GET /api/transaction/:id/detail`.
+  - Tambah `GET /api/transaction/:id/payments`.
+- Output teknis:
+  - Detail item per transaksi dengan qty/discount/price/void flag.
+  - Breakdown pembayaran multi payment untuk audit/rekonsiliasi.
+- Definition of Done:
+  - Kedua endpoint mengembalikan data valid untuk transaksi lama dan baru.
+  - Receipt/reprint flow bisa mengandalkan endpoint ini untuk verifikasi.
+- Dependency:
+  - `transaction_detail`, `transaction_payment`, `transaction`.
+- Risiko:
+  - Data legacy mungkin tidak seragam antar periode dump.
+
+#### SP1-04 (P1) Security Quick Win: SQL Parameterization
+
+- [ ] Status: Not Started
+- Scope:
+  - Refactor query raw berbasis string interpolation (prioritas: verify PIN).
+  - Ganti ke query parameterized di path kritikal.
+- Output teknis:
+  - Daftar query yang sudah di-hardening.
+  - Catatan review area raw SQL tersisa.
+- Definition of Done:
+  - Tidak ada user input langsung masuk SQL string di endpoint kritikal sprint ini.
+  - Lolos test fungsi existing (void flow, auth terkait).
+- Dependency:
+  - `cart.service.js` (verify pin), service lain yang pakai query raw.
+- Risiko:
+  - Refactor cepat tanpa test bisa memicu regresi logika validasi.
+
+#### SP1-05 (P1) Contract Test Minimal Endpoint Kritis
+
+- [ ] Status: Not Started
+- Scope:
+  - Buat test kontrak untuk:
+    - `POST /api/shift/open`
+    - `POST /api/payment/complete`
+    - `POST /api/daily-close/:resetId`
+- Output teknis:
+  - Skenario success + failure utama.
+  - Script test yang bisa dipakai CI/smoke lokal.
+- Definition of Done:
+  - Semua skenario prioritas lulus di local pipeline.
+  - Test mendeteksi minimal 1 kasus duplicate/invalid payload.
+- Dependency:
+  - Data seed minimal untuk flow transaksi.
+- Risiko:
+  - Tanpa seed data konsisten, test jadi flaky.
+
+### Rencana Hari per Hari (Suggested)
+
+- [ ] Day 1: SP1-01 desain + implementasi inti idempotency.
+- [ ] Day 2: SP1-01 hardening + SP1-02 implement endpoint daily balance.
+- [ ] Day 3: SP1-03 implement transaction detail/payments.
+- [ ] Day 4: SP1-04 SQL hardening + bugfix regresi.
+- [ ] Day 5: SP1-05 contract test + full smoke run + sprint review notes.
+
+### Handover Notes untuk Team & AI Agent Lain
+
+- Gunakan istilah `resetId` sebagai session key utama; `settlementId` hanya alias kompatibilitas.
+- Saat update endpoint, dokumentasikan request/response final di file ini agar tidak terjadi mismatch frontend-backend.
+- Jika ada perubahan query finansial, wajib sertakan contoh hitung manual kecil (1 transaksi cash, 1 split payment) di PR description.
+- Semua perubahan di domain payment dan daily-close harus dianggap high risk: wajib ada test atau langkah reproduksi manual.
 
 ---
 
@@ -187,6 +309,8 @@
 ## 8. Transaction History — `/api/transaction/*`
 
 - [x] `GET /api/transactions/:id` — Get completed transaction for receipt/reprint (header + aggregated items + primary payment type)
+  - [x] Optional `receiptHtml` rendered dari template Handlebars user-customizable di `public/template/*.hbs`
+  - [x] Query support: `renderReceiptHtml=true|false`, `template=bill.hbs`
 - [ ] `GET /api/transaction/:id/detail` — Get transaction line items
 - [ ] `GET /api/transaction/:id/payments` — Get transaction payment records
 - [ ] `POST /api/transaction/:id/reprint` — Reprint receipt
@@ -269,6 +393,7 @@
 
 ## 13. Socket.IO Events (F6 — Customer Mirror Screen)
 
+- [x] Relay `display:update` per terminal room (`terminal:register` + room broadcast)
 - [ ] Emit `cart:update` — saat item scan/remove/void
 - [ ] Emit `cart:clear` — saat transaction selesai/cancel
 - [ ] Emit `member:attached` — saat member card di-scan
