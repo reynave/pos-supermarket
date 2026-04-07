@@ -71,10 +71,13 @@ async function listCart(req, res, next) {
 
       return {
         itemId: row.itemId,
+        promotionId: row.promotionId || null,
+        promotionItemId: row.promotionItemId || null,
+        promotionName: row.promotionName || null,
         name: row.description || row.shortDesc || '',
         barcode: row.barcode || row.itemId,
         qty: row.qty,
-        price: row.price1 || 0,
+        price: row.price || 0,
         discount: row.totalDiscount || 0,
         tax: Math.round(taxAmount),
         total: row.totalPrice || 0,

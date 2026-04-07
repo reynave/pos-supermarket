@@ -23,16 +23,18 @@ async function addByBarcode(req, res, next) {
     }
 
     // Insert into kiosk_cart
-    const cartId = await itemService.addToCart(kioskUuid, item, barcode);
+    const addResult = await itemService.addToCart(kioskUuid, item, barcode);
 
     // Get all barcodes for this item
     const barcodes = await itemService.getBarcodesByItemId(item.id);
 
     return success(res, {
-      cartId,
+      cartId: addResult.cartId,
       kioskUuid,
       ...item,
       barcodes,
+      pricing: addResult.pricing,
+      appliedPromotion: addResult.pricing?.appliedPromotion || null,
     });
   } catch (err) {
     next(err);
@@ -61,16 +63,18 @@ async function addByItemId(req, res, next) {
     }
 
     // Insert into kiosk_cart
-    const cartId = await itemService.addToCart(kioskUuid, item, null);
+    const addResult = await itemService.addToCart(kioskUuid, item, null);
 
     // Get all barcodes for this item
     const barcodes = await itemService.getBarcodesByItemId(item.id);
 
     return success(res, {
-      cartId,
+      cartId: addResult.cartId,
       kioskUuid,
       ...item,
       barcodes,
+      pricing: addResult.pricing,
+      appliedPromotion: addResult.pricing?.appliedPromotion || null,
     });
   } catch (err) {
     next(err);
@@ -103,6 +107,8 @@ async function addQtyBySelected(req, res, next) {
       itemId,
       qty,
       insertedCount: result.insertedCount,
+      appliedPromotionCount: result.appliedPromotions?.length || 0,
+      appliedPromotions: result.appliedPromotions || [],
     }, 'Item quantity added successfully');
   } catch (err) {
     next(err);

@@ -80,9 +80,12 @@ async function listCartItems(kioskUuid) {
   const [rows] = await pool.query(
     `SELECT
        kc.itemId,
+       kc.promotionId,
+       kc.promotionItemId,
+       p.description AS promotionName,
        i.description,
        i.shortDesc,
-       i.price1,
+       kc.price,
        i.ppnFlag,
        i.itemUomId,
        i.itemCategoryId,
@@ -94,11 +97,12 @@ async function listCartItems(kioskUuid) {
        SUM(kc.discount) AS totalDiscount
      FROM kiosk_cart kc
      INNER JOIN item i ON i.id = kc.itemId
+     LEFT JOIN promotion p ON p.id = kc.promotionId
      WHERE kc.kioskUuid = ?
        AND kc.presence = 1
        AND kc.void = 0
-     GROUP BY kc.itemId, kc.barcode, i.description, i.shortDesc,
-              i.price1, i.ppnFlag, i.itemUomId, i.itemCategoryId,
+     GROUP BY kc.itemId, kc.barcode, kc.promotionId, kc.promotionItemId, p.description, i.description, i.shortDesc,
+              kc.price, i.ppnFlag, i.itemUomId, i.itemCategoryId,
               i.itemTaxId, i.images
      ORDER BY MIN(kc.inputDate) ASC`,
     [kioskUuid]

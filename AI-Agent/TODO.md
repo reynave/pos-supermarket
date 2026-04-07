@@ -3,13 +3,16 @@
 > Backend only (`pos-supermarket/`). Tidak termasuk Angular frontend.
 > Referensi lengkap: [AGENT.md](./AGENT.md) | Database terbaru: [table-ver2026.sql](./table-ver2026.sql)
 
-## Update Snapshot (2026-04-02)
+## Update Snapshot (2026-04-07)
 
 - Cart core sudah berjalan dengan naming endpoint baru: `POST /api/cart/new`, `GET /api/cart/list/:kioskUuid`, `POST /api/cart/void/:kioskUuid`, `POST /api/cart/voidItem/:kioskUuid`.
 - Scan/add item berjalan di namespace item: `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`.
 - Daily close dedicated endpoint aktif: `GET/POST /api/daily-close/:resetId` dan report/history.
 - Session harian runtime menggunakan `resetId` (alias kompatibilitas `settlementId` masih dipertahankan di beberapa endpoint).
 - Receipt preview support: `GET /api/transactions/:id` dapat mengembalikan `receiptHtml` hasil render template Handlebars dari `public/template/*.hbs` (default `bill.hbs`, query: `renderReceiptHtml=true&template=`).
+- Promotion engine untuk add-to-cart sudah aktif untuk `promotion_item` dan `promotion_discount`, termasuk prioritas header/detail discount dan simpan `promotionId` + `promotionItemId` ke `kiosk_cart`.
+- Filter promo header sudah menyesuaikan kolom `promotion.startDate` / `endDate` bertipe `DATETIME` dengan perbandingan `NOW()`.
+- `GET /api/cart/list/:kioskUuid` sudah mengembalikan `promotionId`, `promotionItemId`, dan `promotionName` per baris cart.
 
 ---
 
@@ -180,6 +183,24 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [x] Item service: findByBarcode, findById, searchByDescription
 - [x] Item schema: Zod validation
 
+### 3.1 Discount percent & Amount
+- [x] table header promotion ini global, 1st priority, type promo aktif: `promotion_item` dan `promotion_discount`
+- [x] promotion detail item discount sudah diterapkan via `promotion_item`
+- [x] jika percent diisi, maka amount tidak berlaku lagi
+- [x] prioritas perhitungan diskon: `header_percent` -> `header_amount` -> `disc1/disc2/disc3` -> `detail_amount` -> `special_price`
+- [x] lookup promo sudah dipisah 2 query: `promotion_item` dulu, lalu `promotion` header
+- [x] filter tanggal promo memakai `DATETIME` (`NOW()`) dan tetap cek flag hari + outlet
+ 
+
+### 3.2 Promotion buy 1 get 1  [buy N get xN]
+- [ ] table header promotion ini global, 1st priority, promotion Id = 'promotion_free'
+- [ ] promotion_free for detail 
+
+### 3.2 Promotion discount pertahap  20% + 30%
+- [ ] table header promotion setting promotion Id = 'promotion_discount'
+- [ ] promotion_discount for detail item
+
+
 ---
 
 ## 4. Cart / Active Transaction — `/api/cart/*` (F2)
@@ -192,13 +213,17 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [~] `POST /api/cart/scan` — Scan barcode & add item to cart
   - [x] Implemented via `POST /api/item/barcode` (+ `POST /api/item/add`)
   - Lookup barcode → item
-  - [ ] Check active promotions (semua tipe promo)
-  - [ ] Calculate price after discount
+  - [~] Check active promotions
+  - [x] `promotion_item` dan `promotion_discount` aktif pada alur add-to-cart
+  - [ ] `promotion_free` / buy-X-get-Y belum aktif
+  - [x] Calculate price after discount
   - [x] Insert ke `kiosk_cart`
+  - [x] Simpan `promotionId` dan `promotionItemId` ke `kiosk_cart`
   - [ ] Handle free item → `kiosk_cart_free_item`
   - [ ] Emit Socket.IO `cart:update`
 - [x] `GET /api/cart/:kioskUuid` — Get current cart session info
 - [x] `GET /api/cart/list/:kioskUuid` — Get current cart items & totals
+  - [x] Response item sudah include `promotionId`, `promotionItemId`, `promotionName`
 - [~] `PUT /api/cart/item/:id` — Update cart item (qty, price edit, void)
   - [x] Partial: void item implemented via `POST /api/cart/voidItem/:kioskUuid`
   - [x] Partial: add qty implemented via `POST /api/item/add-qty`
@@ -223,22 +248,25 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 
 ---
 
+
+
 ## 5. Promotion Engine — `/api/promotion/*` (F3)
 
-- [ ] `GET /api/promotion/check/:itemId` — Check active promotions for item
-  - Filter by: active date range, day-of-week, status
-  - Support semua tipe:
-    - Type 0: Item-level discount (`promotion_item`) — disc1/disc2/disc3, specialPrice, discountPrice
-    - Type 1: Buy-X-Get-Y Free (`promotion_free`)
-    - Type 2: Buy-N-Get-Free (varian)
-    - Type 3: Quantity-based discount (`promotion_discount`)
+- [~] Promotion check aktif di flow add-to-cart (`POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`)
+  - [x] Filter by: active date range, day-of-week, status, outlet
+  - [x] Support Type 0: Item-level discount (`promotion_item`) — disc1/disc2/disc3, specialPrice, discountPrice
+  - [ ] Support Type 1: Buy-X-Get-Y Free (`promotion_free`)
+  - [ ] Support Type 2: Buy-N-Get-Free (varian)
+  - [x] Support Type 3: Quantity-based discount (`promotion_discount`)
+  - [x] Hasil promo disimpan ke `kiosk_cart` dan diekspos kembali di cart list
+- [ ] `GET /api/promotion/check/:itemId` — Standalone endpoint check promo masih belum dibuat
 - [ ] `GET /api/promotion/fixed/:amount` — Check transaction-level promos (`promo_fixed`)
   - Cek `targetAmount` vs transaction amount
   - `isMultiple` logic (multiply benefit)
   - `ifAmountNearTarget` threshold message
 - [ ] Promotion service: checkItemPromotion, checkTransactionPromo, applyDiscount, applyFreeItem
-- [ ] Helper: calculateCascadingDiscount(price, disc1, disc2, disc3)
-- [ ] Helper: checkDayOfWeek(promotion) — filter Mon-Sun flags
+- [x] Helper: calculateCascadingDiscount(price, disc1, disc2, disc3)
+- [x] Helper: checkDayOfWeek(promotion) — implemented via header day-flag filter di query promo aktif
 
 ---
 
