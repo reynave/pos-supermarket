@@ -1,4 +1,7 @@
 SUPERMARKET POS
+{{#if isCopyReceipt}}
+COPY STRUK
+{{/if}}
 ----------------------------------
 {{formatDateTime transaction.inputDate}}/{{transaction.id}}/{{transaction.terminalId}}/{{transaction.cashierName}}
 ----------------------------------
@@ -17,4 +20,18 @@ Methode Pembayaran:
 {{formatLine "Payment " primaryPaymentTypeId 34}}
 {{/each}}
 ----------------------------------
+{{#if vouchers.length}}
+{{#each vouchers}}
+Selamat anda dapat Voucher Belanja.
+Voucher sebesar {{currencyIdr this.voucherGiftAmount}}
+Kode Voucher: {{this.transactionId}}
+Min. Belanja Voucher: {{currencyIdr this.voucherMinAmount}} 
+Berlaku Sampai: {{formatDateOnly this.voucherExpDate}}
+{{/each}}
+{{/if}}
+
+{{#if totalPrintLog }}
+No of copy print: {{totalPrintLog}}
+{{/if}}
+
 Thank you for shopping with us!

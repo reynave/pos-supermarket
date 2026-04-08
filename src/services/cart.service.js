@@ -82,9 +82,12 @@ async function listCartItems(kioskUuid) {
        kc.itemId,
        kc.promotionId,
        kc.promotionItemId,
+       kc.promotionFreeId,
+       kc.isFreeItem,
        p.description AS promotionName,
        i.description,
        i.shortDesc,
+       kc.originPrice,
        kc.price,
        i.ppnFlag,
        i.itemUomId,
@@ -93,6 +96,7 @@ async function listCartItems(kioskUuid) {
        i.images,
        kc.barcode,
        COUNT(kc.id) AS qty,
+       SUM(kc.originPrice) AS totalOriginPrice,
        SUM(kc.price) AS totalPrice,
        SUM(kc.discount) AS totalDiscount
      FROM kiosk_cart kc
@@ -101,8 +105,9 @@ async function listCartItems(kioskUuid) {
      WHERE kc.kioskUuid = ?
        AND kc.presence = 1
        AND kc.void = 0
-     GROUP BY kc.itemId, kc.barcode, kc.promotionId, kc.promotionItemId, p.description, i.description, i.shortDesc,
-              kc.price, i.ppnFlag, i.itemUomId, i.itemCategoryId,
+     GROUP BY kc.itemId, kc.barcode, kc.promotionId, kc.promotionItemId, kc.promotionFreeId, kc.isFreeItem,
+              p.description, i.description, i.shortDesc,
+              kc.originPrice, kc.price, i.ppnFlag, i.itemUomId, i.itemCategoryId,
               i.itemTaxId, i.images
      ORDER BY MIN(kc.inputDate) ASC`,
     [kioskUuid]
@@ -141,35 +146,116 @@ async function deleteCartByKioskUuid(kioskUuid) {
  * If qty >= available, delete all rows for that item.
  */
 async function voidCartItem(kioskUuid, itemId, barcode, qty, reason) {
+  const itemService = require('./item.service');
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
-    // Find all matching rows (not voided)
-    let q = `SELECT id FROM kiosk_cart WHERE kioskUuid = ? AND itemId = ? AND presence = 1 AND void = 0`;
-    const params = [kioskUuid, itemId];
-    if (barcode) {
-      q += ' AND barcode = ?';
-      params.push(barcode);
+
+    let resolvedItemId = Number(itemId || 0);
+    let resolvedBarcode = barcode || null;
+
+    if (!resolvedItemId && resolvedBarcode) {
+      const [itemRows] = await conn.query(
+        `SELECT itemId, barcode
+         FROM kiosk_cart
+         WHERE kioskUuid = ?
+           AND barcode = ?
+           AND presence = 1
+           AND void = 0
+           AND COALESCE(isFreeItem, '') <> '1'
+         ORDER BY inputDate ASC
+         LIMIT 1`,
+        [kioskUuid, resolvedBarcode]
+      );
+
+      if (!itemRows.length) {
+        await conn.rollback();
+        return false;
+      }
+
+      resolvedItemId = Number(itemRows[0].itemId || 0);
+      resolvedBarcode = itemRows[0].barcode || resolvedBarcode;
     }
-    q += ' ORDER BY inputDate ASC';
-    const [rows] = await conn.query(q, params);
-    if (!rows.length) {
+
+    if (!resolvedItemId) {
       await conn.rollback();
       return false;
     }
-    // Only void up to qty requested
-    const toVoid = rows.slice(0, qty);
-    if (!toVoid.length) {
+
+    const [paidRows] = await conn.query(
+      `SELECT COUNT(*) AS qty
+       FROM kiosk_cart
+       WHERE kioskUuid = ?
+         AND itemId = ?
+         AND presence = 1
+         AND void = 0
+         AND COALESCE(isFreeItem, '') <> '1'`,
+      [kioskUuid, resolvedItemId]
+    );
+
+    const currentQty = Number(paidRows[0]?.qty || 0);
+    if (currentQty < 1) {
       await conn.rollback();
       return false;
     }
-    const ids = toVoid.map(r => r.id);
-    // Mark as voided (void=1), optionally store reason in note
+
+    const requestedQty = Math.max(0, Number(qty || 0));
+    const newQty = Math.max(0, currentQty - requestedQty);
+
+    const [freeRuleRows] = await conn.query(
+      `SELECT DISTINCT promotionFreeId
+       FROM kiosk_cart
+       WHERE kioskUuid = ?
+         AND itemId = ?
+         AND presence = 1
+         AND void = 0
+         AND COALESCE(isFreeItem, '') <> '1'
+         AND promotionFreeId IS NOT NULL`,
+      [kioskUuid, resolvedItemId]
+    );
+
+    const promotionFreeIds = freeRuleRows
+      .map((row) => Number(row.promotionFreeId || 0))
+      .filter((id) => id > 0);
+
     await conn.query(
-      `UPDATE kiosk_cart SET void = 1, note = CONCAT(IFNULL(note,''), ?) WHERE id IN (${ids.map(() => '?').join(',')})`,
-      [`[void]${reason ? ' ' + reason : ''}`, ...ids]
+      `DELETE FROM kiosk_cart_free_item
+       WHERE kioskUuid = ?
+         AND itemId = ?`,
+      [kioskUuid, resolvedItemId]
+    );
+
+    if (promotionFreeIds.length) {
+      const freePlaceholders = promotionFreeIds.map(() => '?').join(',');
+      await conn.query(
+        `DELETE FROM kiosk_cart
+         WHERE kioskUuid = ?
+           AND promotionFreeId IN (${freePlaceholders})
+           AND COALESCE(isFreeItem, '') = '1'`,
+        [kioskUuid, ...promotionFreeIds]
+      );
+    }
+
+    await conn.query(
+      `DELETE FROM kiosk_cart
+       WHERE kioskUuid = ?
+         AND itemId = ?
+         AND presence = 1
+         AND void = 0
+         AND COALESCE(isFreeItem, '') <> '1'`,
+      [kioskUuid, resolvedItemId]
     );
     await conn.commit();
+
+    if (newQty > 0) {
+      const item = await itemService.findById(resolvedItemId);
+      if (!item) {
+        return false;
+      }
+
+      await itemService.addQtyBySelected(kioskUuid, item, resolvedBarcode, newQty);
+    }
+
     return true;
   } catch (err) {
     await conn.rollback();

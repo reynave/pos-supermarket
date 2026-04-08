@@ -68,15 +68,20 @@ async function listCart(req, res, next) {
     const items = rows.map((row) => {
       const hasTax = row.ppnFlag === 1 || String(row.itemTaxId) === '2';
       const taxAmount = hasTax ? row.totalPrice * (PPN_RATE / 100) : 0;
+      const isFreeItem = String(row.isFreeItem || '') === '1';
 
       return {
         itemId: row.itemId,
         promotionId: row.promotionId || null,
         promotionItemId: row.promotionItemId || null,
+        promotionFreeId: row.promotionFreeId || null,
         promotionName: row.promotionName || null,
+        isFreeItem,
         name: row.description || row.shortDesc || '',
         barcode: row.barcode || row.itemId,
         qty: row.qty,
+        originPrice: row.originPrice || 0,
+        totalOriginPrice: row.totalOriginPrice || 0,
         price: row.price || 0,
         discount: row.totalDiscount || 0,
         tax: Math.round(taxAmount),

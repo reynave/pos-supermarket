@@ -19,6 +19,7 @@ const dailyCloseRoutes = require('./routes/daily-close.routes');
 const manualCashRoutes = require('./routes/manual-cash.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const printRoutes = require('./routes/print.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -58,6 +59,7 @@ app.use('/api/daily-close', dailyCloseRoutes);
 app.use('/api/manual-cash', manualCashRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/print', printRoutes);
 
 // --- 404 ---
 app.use((_req, res) => {

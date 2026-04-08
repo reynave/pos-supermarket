@@ -21,6 +21,10 @@ function applyCascadingDiscount(price, disc1 = 0, disc2 = 0, disc3 = 0) {
   return Math.max(0, roundMoney(current));
 }
 
+function isTruthyFlag(value) {
+  return Number(value) === 1 || String(value || '').toLowerCase() === '1';
+}
+
 async function getNextItemQtyInCart(kioskUuid, itemId) {
   const [rows] = await pool.query(
     `SELECT COUNT(*) AS qty
@@ -28,7 +32,8 @@ async function getNextItemQtyInCart(kioskUuid, itemId) {
      WHERE kioskUuid = ?
        AND itemId = ?
        AND presence = 1
-       AND void = 0`,
+       AND void = 0
+       AND COALESCE(isFreeItem, '') <> '1'`,
     [kioskUuid, itemId]
   );
 
@@ -134,6 +139,233 @@ async function findPromotionItemRule({ itemId, qtyInCartNext, storeOutletId }) {
   });
 
   return candidates[0] || null;
+}
+
+async function findPromotionFreeRule({ itemId, storeOutletId }) {
+  const dayColumn = DAY_TO_COLUMN[new Date().getDay()] || 'Mon';
+  const outletId = storeOutletId || '';
+
+  const [rows] = await pool.query(
+    `SELECT
+       pf.id AS promotionFreeId,
+       pf.promotionId,
+       pf.itemId,
+       pf.qty,
+       pf.freeItemId,
+       pf.freeQty,
+       pf.applyMultiply,
+       pf.scanFree,
+       pf.printOnBill,
+       p.description AS promotionDescription,
+       p.storeOutlesId,
+       p.startDate
+     FROM promotion_free pf
+     INNER JOIN promotion p ON p.id = pf.promotionId
+     WHERE pf.status = 1 AND pf.presence = 1
+       AND pf.itemId = ?
+       AND p.typeOfPromotion = 'promotion_free'
+       AND p.status = 1 AND p.presence = 1
+       AND (p.startDate IS NULL OR p.startDate <= NOW())
+       AND (p.endDate IS NULL OR p.endDate >= NOW())
+       AND COALESCE(p.${dayColumn}, 0) = 1
+       AND (
+         p.storeOutlesId IS NULL OR p.storeOutlesId = '' OR p.storeOutlesId = ?
+       )
+     ORDER BY pf.id ASC`,
+    [itemId, outletId]
+  );
+
+  if (!rows.length) {
+    return null;
+  }
+
+  const toMillis = (value) => {
+    if (!value) return 0;
+    const ts = new Date(value).getTime();
+    return Number.isFinite(ts) ? ts : 0;
+  };
+
+  rows.sort((a, b) => {
+    const aOutletPriority = a.storeOutlesId === outletId ? 0 : 1;
+    const bOutletPriority = b.storeOutlesId === outletId ? 0 : 1;
+    if (aOutletPriority !== bOutletPriority) {
+      return aOutletPriority - bOutletPriority;
+    }
+
+    const dateDiff = toMillis(b.startDate) - toMillis(a.startDate);
+    if (dateDiff !== 0) {
+      return dateDiff;
+    }
+
+    return Number(a.promotionFreeId || 0) - Number(b.promotionFreeId || 0);
+  });
+
+  return rows[0] || null;
+}
+
+async function countPaidTriggerQty(kioskUuid, itemId) {
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS qty
+     FROM kiosk_cart
+     WHERE kioskUuid = ?
+       AND itemId = ?
+       AND presence = 1
+       AND void = 0
+       AND COALESCE(isFreeItem, '') <> '1'`,
+    [kioskUuid, itemId]
+  );
+
+  return Number(rows[0]?.qty || 0);
+}
+
+async function getExistingFreeRows(kioskUuid, promotionFreeId) {
+  const [rows] = await pool.query(
+    `SELECT id
+     FROM kiosk_cart
+     WHERE kioskUuid = ?
+       AND promotionFreeId = ?
+       AND presence = 1
+       AND void = 0
+       AND COALESCE(isFreeItem, '') = '1'
+     ORDER BY inputDate DESC, id DESC`,
+    [kioskUuid, promotionFreeId]
+  );
+  return rows;
+}
+
+function calculatePromotionFreeEntitlement(triggerQty, rule) {
+  const paidQty = Math.max(0, Number(triggerQty || 0));
+  const triggerBase = Math.max(1, Number(rule?.qty || 0));
+  const freeQty = Math.max(0, Number(rule?.freeQty || 0));
+
+  if (paidQty < triggerBase || freeQty <= 0) {
+    return 0;
+  }
+
+  if (isTruthyFlag(rule?.applyMultiply)) {
+    return Math.floor(paidQty / triggerBase) * freeQty;
+  }
+
+  return freeQty;
+}
+
+async function insertPromotionFreeRows(kioskUuid, rule, freeItem, qtyToInsert) {
+  if (!qtyToInsert || qtyToInsert < 1) {
+    return 0;
+  }
+
+  let inserted = 0;
+  const nowDatetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const freeItemPrice = roundMoney(toNumber(freeItem?.price1 || 0));
+  const scanFree = isTruthyFlag(rule.scanFree) ? 1 : 0;
+  const printOnBill = isTruthyFlag(rule.printOnBill) ? 1 : 0;
+
+  for (let i = 0; i < qtyToInsert; i += 1) {
+    const [insertCart] = await pool.query(
+      `INSERT INTO kiosk_cart
+         (kioskUuid, promotionId, promotionFreeId, itemId, barcode, originPrice, discount, price, isFreeItem, presence, inputDate, updateDate)
+       VALUES (?, ?, ?, ?, ?, ?, 0, 0, '1', 1, ?, ?)`,
+      [
+        kioskUuid,
+        rule.promotionId,
+        rule.promotionFreeId,
+        rule.freeItemId,
+        null,
+        freeItemPrice,
+        nowDatetime,
+        nowDatetime,
+      ]
+    );
+
+    await pool.query(
+      `INSERT INTO kiosk_cart_free_item
+         (kioskUuid, promotionId, promotionFreeId, itemId, freeItemId, kioskCartId, useBykioskUuidId, originPrice, barcode, scanFree, price, printOnBill, void, status, presence, inputDate, updateDate)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, 0, ?, 0, 1, 1, ?, ?)`,
+      [
+        kioskUuid,
+        rule.promotionId,
+        rule.promotionFreeId,
+        rule.itemId,
+        rule.freeItemId,
+        String(insertCart.insertId),
+        null,
+        Math.round(freeItemPrice),
+        scanFree,
+        printOnBill,
+        nowDatetime,
+        nowDatetime,
+      ]
+    );
+
+    inserted += 1;
+  }
+
+  return inserted;
+}
+
+async function voidPromotionFreeRows(kioskUuid, promotionFreeId, qtyToVoid) {
+  if (!qtyToVoid || qtyToVoid < 1) {
+    return 0;
+  }
+
+  const rows = await getExistingFreeRows(kioskUuid, promotionFreeId);
+  const targets = rows.slice(0, qtyToVoid);
+  if (!targets.length) {
+    return 0;
+  }
+
+  const nowDatetime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const ids = targets.map((row) => row.id);
+  const placeholders = ids.map(() => '?').join(', ');
+
+  await pool.query(
+    `UPDATE kiosk_cart
+     SET void = 1,
+         note = CONCAT(IFNULL(note, ''), '[auto-void-free] entitlement changed')
+     WHERE id IN (${placeholders})`,
+    ids
+  );
+
+  await pool.query(
+    `UPDATE kiosk_cart_free_item
+     SET void = 1,
+         updateDate = ?
+     WHERE kioskUuid = ?
+       AND promotionFreeId = ?
+       AND kioskCartId IN (${placeholders})`,
+    [nowDatetime, kioskUuid, promotionFreeId, ...ids.map((id) => String(id))]
+  );
+
+  return targets.length;
+}
+
+async function reconcilePromotionFreeForKiosk({ kioskUuid, rule }) {
+  if (!rule) {
+    return { inserted: 0, voided: 0, entitlement: 0, existing: 0 };
+  }
+
+  const paidQty = await countPaidTriggerQty(kioskUuid, rule.itemId);
+  const entitlement = calculatePromotionFreeEntitlement(paidQty, rule);
+  const existingRows = await getExistingFreeRows(kioskUuid, rule.promotionFreeId);
+  const existing = existingRows.length;
+  const delta = entitlement - existing;
+
+  if (delta > 0) {
+    const freeItem = await findById(rule.freeItemId);
+    if (!freeItem) {
+      return { inserted: 0, voided: 0, entitlement, existing };
+    }
+
+    const inserted = await insertPromotionFreeRows(kioskUuid, rule, freeItem, delta);
+    return { inserted, voided: 0, entitlement, existing };
+  }
+
+  if (delta < 0) {
+    const voided = await voidPromotionFreeRows(kioskUuid, rule.promotionFreeId, Math.abs(delta));
+    return { inserted: 0, voided, entitlement, existing };
+  }
+
+  return { inserted: 0, voided: 0, entitlement, existing };
 }
 
 function calculatePromotionItemDiscount(price, rule) {
@@ -311,21 +543,29 @@ async function addToCart(kioskUuid, item, barcode) {
 
   const kiosk   = await findKioskUuid(kioskUuid);
   const nextQty = await getNextItemQtyInCart(kioskUuid, item.id);
-  const rule    = await findPromotionItemRule({
+  const freeRule = await findPromotionFreeRule({
     itemId: item.id,
-    qtyInCartNext: nextQty,
     storeOutletId: kiosk?.storeOutlesId || null,
   });
-  const pricing = calculatePromotionItemDiscount(item.price1 || 0, rule);
+  const itemRule = freeRule
+    ? null
+    : await findPromotionItemRule({
+      itemId: item.id,
+      qtyInCartNext: nextQty,
+      storeOutletId: kiosk?.storeOutlesId || null,
+    });
+  const pricing = calculatePromotionItemDiscount(item.price1 || 0, itemRule);
+
 
   const [result] = await pool.query(
     `INSERT INTO kiosk_cart
-       (kioskUuid, promotionId, promotionItemId, itemId, barcode, originPrice, discount, price, presence, inputDate, updateDate)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,
+       (kioskUuid, promotionId, promotionItemId, promotionFreeId, itemId, barcode, originPrice, discount, price, isFreeItem, presence, inputDate, updateDate)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, '', 1, ?, ?)`,
     [
       kioskUuid,
-      pricing.promotionId,
+      freeRule ? freeRule.promotionId : pricing.promotionId,
       pricing.promotionItemId,
+      freeRule ? freeRule.promotionFreeId : null,
       item.id,
       barcode || null,
       pricing.originPrice,
@@ -335,6 +575,11 @@ async function addToCart(kioskUuid, item, barcode) {
       nowDatetime,
     ]
   );
+
+  if (freeRule) {
+    await reconcilePromotionFreeForKiosk({ kioskUuid, rule: freeRule });
+  }
+
   return {
     cartId: result.insertId,
     pricing,
@@ -354,30 +599,39 @@ async function addQtyBySelected(kioskUuid, item, barcode, qty) {
   const [countRows] = await pool.query(
     `SELECT COUNT(*) AS qty
      FROM kiosk_cart
-     WHERE kioskUuid = ? AND itemId = ? AND presence = 1 AND void = 0`,
+     WHERE kioskUuid = ? AND itemId = ? AND presence = 1 AND void = 0
+       AND COALESCE(isFreeItem, '') <> '1'`,
     [kioskUuid, item.id]
   );
 
   let runningQty = Number(countRows[0]?.qty || 0);
+  const freeRule = await findPromotionFreeRule({
+    itemId: item.id,
+    storeOutletId: kiosk?.storeOutlesId || null,
+  });
 
   for (let i = 0; i < qty; i += 1) {
     runningQty += 1;
-    const rule = await findPromotionItemRule({
-      itemId: item.id,
-      qtyInCartNext: runningQty,
-      storeOutletId: kiosk?.storeOutlesId || null,
-    });
-    const pricing = calculatePromotionItemDiscount(item.price1 || 0, rule);
+    const itemRule = freeRule
+      ? null
+      : await findPromotionItemRule({
+        itemId: item.id,
+        qtyInCartNext: runningQty,
+        storeOutletId: kiosk?.storeOutlesId || null,
+      });
+    const pricing = calculatePromotionItemDiscount(item.price1 || 0, itemRule);
 
     values.push([
       kioskUuid,
-      pricing.promotionId,
+      freeRule ? freeRule.promotionId : pricing.promotionId,
       pricing.promotionItemId,
+      freeRule ? freeRule.promotionFreeId : null,
       item.id,
       barcode || null,
       pricing.originPrice,
       pricing.discount,
       pricing.finalPrice,
+      '',
       1,
       nowDatetime,
       nowDatetime,
@@ -390,10 +644,14 @@ async function addQtyBySelected(kioskUuid, item, barcode, qty) {
 
   const [result] = await pool.query(
     `INSERT INTO kiosk_cart
-       (kioskUuid, promotionId, promotionItemId, itemId, barcode, originPrice, discount, price, presence, inputDate, updateDate)
+       (kioskUuid, promotionId, promotionItemId, promotionFreeId, itemId, barcode, originPrice, discount, price, isFreeItem, presence, inputDate, updateDate)
      VALUES ?`,
     [values]
   );
+
+  if (freeRule) {
+    await reconcilePromotionFreeForKiosk({ kioskUuid, rule: freeRule });
+  }
 
   return {
     insertedCount: Number(result.affectedRows || 0),

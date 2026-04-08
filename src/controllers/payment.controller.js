@@ -17,6 +17,61 @@ async function getPaymentTypes(req, res, next) {
 }
 
 /**
+ * GET /api/payment/types/all
+ * List payment types for settings (presence=1, ignore status).
+ */
+async function getAllPaymentTypes(req, res, next) {
+  try {
+    const types = await paymentService.getAllPaymentTypes();
+    return success(res, types);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/payment/types/:id
+ * Get payment type detail by id.
+ */
+async function getPaymentTypeDetail(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!id) return error(res, 'payment type id is required', 400);
+
+    const detail = await paymentService.getPaymentTypeById(id);
+    if (!detail) return error(res, 'Payment type not found', 404);
+
+    return success(res, detail);
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * PUT /api/payment/types/:id
+ * Update payment type detail fields.
+ */
+async function updatePaymentTypeDetail(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!id) return error(res, 'payment type id is required', 400);
+
+    const payload = { ...req.body };
+    if (payload.connectionType !== undefined) {
+      payload.connectionType = String(payload.connectionType || '').trim().toUpperCase();
+    }
+
+    const updated = await paymentService.updatePaymentTypeById(id, payload);
+    if (!updated) return error(res, 'Payment type not found or no changes applied', 404);
+
+    const detail = await paymentService.getPaymentTypeById(id);
+    return success(res, detail, 'Payment type updated');
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
  * GET /api/payment/pending/:kioskUuid
  * Get all pending (not yet finalized) payment entries for a cart.
  */
@@ -110,6 +165,13 @@ async function completePayment(req, res, next) {
       approvedCode: p.approvedCode || '',
     }));
 
+    // Voucher promotion is evaluated at payment stage, not during add-to-cart.
+    const grandTotal = await paymentService.getCartGrandTotal(kioskUuid);
+    const voucherPromotion = await paymentService.checkVoucherPromotion(
+      grandTotal,
+      kiosk.storeOutlesId || null,
+    );
+
     const transaction = await transactionService.createTransaction({
       kioskUuid,
       cashierId: kiosk.cashierId,
@@ -118,6 +180,7 @@ async function completePayment(req, res, next) {
       storeOutletId: kiosk.storeOutlesId,
       payments,
       cashReceived: cashReceived ? Number(cashReceived) : undefined,
+      voucherPromotion,
     });
 
     // Clean up kiosk_paid_pos after successful transaction
@@ -134,6 +197,9 @@ async function completePayment(req, res, next) {
 
 module.exports = {
   getPaymentTypes,
+  getAllPaymentTypes,
+  getPaymentTypeDetail,
+  updatePaymentTypeDetail,
   getPendingPayments,
   addPayment,
   removePayment,

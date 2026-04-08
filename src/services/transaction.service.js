@@ -46,9 +46,50 @@ Handlebars.registerHelper('formatDateTime', (value) => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 });
 
+Handlebars.registerHelper('formatDateOnly', (value) => {
+  if (!value) {
+    return '';
+  }
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+});
+
 function normalizeTemplateName(templateName) {
   const fileName = path.basename(templateName || 'bill.hbs');
   return fileName.endsWith('.hbs') ? fileName : `${fileName}.hbs`;
+}
+
+function formatMysqlDatetime(value) {
+  if (!value) {
+    return null;
+  }
+
+  const normalizedValue = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? `${value} 00:00:00`
+    : value;
+
+  const date = normalizedValue instanceof Date ? normalizedValue : new Date(normalizedValue);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
 async function renderReceiptTemplate(payload, templateName = 'bill.hbs') {
@@ -144,6 +185,7 @@ async function getDrawerPaymentTypeIds(paymentTypeIds, conn) {
  * @param {string} params.storeOutletId
  * @param {Array}  params.payments - [{ paymentTypeId: 'CASH'|'DEBITCC'|'QRIS', amount, reference?, approvedCode? }]
  * @param {number} [params.cashReceived] - actual cash tendered (for CASH)
+ * @param {Object|null} [params.voucherPromotion] - result of checkVoucherPromotion()
  */
 async function createTransaction({
   kioskUuid,
@@ -153,6 +195,7 @@ async function createTransaction({
   storeOutletId,
   payments,
   cashReceived,
+  voucherPromotion = null,
 }) {
   const conn = await pool.getConnection();
   try {
@@ -292,6 +335,27 @@ async function createTransaction({
       [nowDatetime, kioskUuid],
     );
 
+    // 9. Save voucher reward snapshot for this transaction if promotion matched.
+    if (voucherPromotion && Number(voucherPromotion.giftAmount || 0) > 0) {
+      const voucherExpDate = formatMysqlDatetime(voucherPromotion.voucherExpDate);
+
+      await conn.query(
+        `INSERT INTO transaction_voucher
+           (transactionId, voucherMinAmount, voucherAllowMultyple,
+            voucherGiftAmount, voucherExpDate, inputDate, inputBy)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          transactionId,
+          Number(voucherPromotion.voucherMinAmount || 0),
+          Number(voucherPromotion.voucherAllowMultyple || 0),
+          Number(voucherPromotion.giftAmount || 0),
+          voucherExpDate,
+          nowDatetime,
+          cashierId,
+        ],
+      );
+    }
+
     await conn.commit();
 
     // Return data matching the frontend Transaction model
@@ -303,6 +367,14 @@ async function createTransaction({
       tax: totalPpn,
       discount: totalDiscount,
       grandTotal,
+      voucher: voucherPromotion
+        ? {
+            promotionId: voucherPromotion.promotionId,
+            promotionDescription: voucherPromotion.promotionDescription,
+            giftAmount: Number(voucherPromotion.giftAmount || 0),
+            expDate: voucherPromotion.voucherExpDate,
+          }
+        : null,
       status: 1,
       inputDate: nowDatetime,
     };
@@ -467,6 +539,29 @@ async function getTransactionById(id, options = {}) {
     [id],
   );
 
+  const [voucherRows] = await pool.query(
+    `SELECT
+       id,
+       transactionId,
+       voucherMinAmount,
+       voucherAllowMultyple,
+       voucherGiftAmount,
+       voucherExpDate,
+       inputDate,
+       inputBy
+     FROM transaction_voucher
+     WHERE transactionId = ?
+     ORDER BY id ASC`,
+    [id],
+  );
+
+  const [printLogRows] = await pool.query(
+    `SELECT COUNT(*) AS totalPrintLog
+     FROM transaction_printlog
+     WHERE transactionId = ?`,
+    [id],
+  );
+
   const paymentMethods = paymentRows.map((row) => ({
     id: Number(row.id),
     paymentTypeId: row.paymentTypeId,
@@ -479,6 +574,20 @@ async function getTransactionById(id, options = {}) {
 
   const primaryPaymentTypeId = paymentMethods[0]?.paymentTypeId || 'CASH';
 
+  const vouchers = voucherRows.map((row) => ({
+    id: Number(row.id),
+    transactionId: row.transactionId,
+    voucherMinAmount: Number(row.voucherMinAmount || 0),
+    voucherAllowMultyple: Number(row.voucherAllowMultyple || 0),
+    voucherGiftAmount: Number(row.voucherGiftAmount || 0),
+    voucherExpDate: row.voucherExpDate,
+    inputDate: row.inputDate,
+    inputBy: row.inputBy,
+  }));
+
+  const totalPrintLog = Number(printLogRows[0]?.totalPrintLog || 0);
+  const isCopyReceipt = totalPrintLog > 1;
+
   const result = {
     transaction: {
       ...transaction,
@@ -487,6 +596,9 @@ async function getTransactionById(id, options = {}) {
     },
     items,
     paymentMethods,
+    vouchers,
+    totalPrintLog,
+    isCopyReceipt,
     primaryPaymentTypeId,
   };
 

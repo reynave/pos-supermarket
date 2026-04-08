@@ -3,7 +3,7 @@
 > Backend only (`pos-supermarket/`). Tidak termasuk Angular frontend.
 > Referensi lengkap: [AGENT.md](./AGENT.md) | Database terbaru: [table-ver2026.sql](./table-ver2026.sql)
 
-## Update Snapshot (2026-04-07)
+## Update Snapshot (2026-04-08)
 
 - Cart core sudah berjalan dengan naming endpoint baru: `POST /api/cart/new`, `GET /api/cart/list/:kioskUuid`, `POST /api/cart/void/:kioskUuid`, `POST /api/cart/voidItem/:kioskUuid`.
 - Scan/add item berjalan di namespace item: `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`.
@@ -13,6 +13,7 @@
 - Promotion engine untuk add-to-cart sudah aktif untuk `promotion_item` dan `promotion_discount`, termasuk prioritas header/detail discount dan simpan `promotionId` + `promotionItemId` ke `kiosk_cart`.
 - Filter promo header sudah menyesuaikan kolom `promotion.startDate` / `endDate` bertipe `DATETIME` dengan perbandingan `NOW()`.
 - `GET /api/cart/list/:kioskUuid` sudah mengembalikan `promotionId`, `promotionItemId`, dan `promotionName` per baris cart.
+- Payment type settings API sudah aktif: `GET /api/payment/types/all`, `GET /api/payment/types/:id`, `PUT /api/payment/types/:id`.
 
 ---
 
@@ -190,17 +191,43 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [x] prioritas perhitungan diskon: `header_percent` -> `header_amount` -> `disc1/disc2/disc3` -> `detail_amount` -> `special_price`
 - [x] lookup promo sudah dipisah 2 query: `promotion_item` dulu, lalu `promotion` header
 - [x] filter tanggal promo memakai `DATETIME` (`NOW()`) dan tetap cek flag hari + outlet
- 
+- [ ] Promotion discount pertahap  20% + 30% 
 
 ### 3.2 Promotion buy 1 get 1  [buy N get xN]
 - [ ] table header promotion ini global, 1st priority, promotion Id = 'promotion_free'
 - [ ] promotion_free for detail 
-
-### 3.2 Promotion discount pertahap  20% + 30%
-- [ ] table header promotion setting promotion Id = 'promotion_discount'
-- [ ] promotion_discount for detail item
-
-
+- [ ] Logic summary (buy N get xN)
+  - Header filter: `promotion.typeOfPromotion = promotion_free`, aktif by date/day/outlet, prioritas outlet spesifik lalu `startDate` terbaru.
+  - Detail source: `promotion_free` (`id`, `promotionId`, `itemId`, `qty`, `freeItemId`, `freeQty`, `applyMultiply`, `scanFree`, `printOnBill`).
+  - Entitlement formula:
+    - `applyMultiply = 1`: `floor(paidQty / qty) * freeQty`
+    - `applyMultiply = 0`: jika `paidQty >= qty` maka `freeQty`, selain itu `0`
+  - Saat add item trigger: hitung entitlement, bandingkan dengan existing free item, insert delta free item ke `kiosk_cart`.
+  - Free row di `kiosk_cart`:
+    - `price = 0`
+    - `originPrice = harga asli free item`
+    - `discount = 0`
+    - `promotionId = header promotion id`
+    - `promotionFreeId = promotion_free.id`
+    - `isFreeItem = 1` (atau nilai penanda free item konsisten sistem)
+  - Saat void/delete item trigger: hitung ulang entitlement; jika turun, free item berlebih harus ikut void/hilang dari `kiosk_cart`.
+  - Anti-loop: item free tidak boleh dihitung sebagai trigger entitlement berikutnya.
+  - Reconcile point wajib dipanggil di flow add item, add qty, dan void item.
+ 
+### 3.2 Promotion voucher min total X get voucher y
+> Status: [x] DONE — 2026-04-08
+- [x] voucher belanja untuk minimum total belanjaan sebesar x ( x >= requiredVoucherMinAmount), maka customer akan mendapakan voucher belanja sebesar y, dan bisa juga berkelipatan, jika belajanja 2x maka mendapankan 2y
+- [x] global promotion, typeOfPromotion = `voucher`
+- [x] Jika belanja >= requiredVoucherMinAmount, maka mendapatkan voucher senilai voucherGiftAmount
+- [x] berlaku kelipatan jika requiredVoucherAllowMultyple = 1 → `floor(grandTotal / requiredVoucherMinAmount) * voucherGiftAmount`
+- [x] Filter aktif: date range (NOW()), day-of-week, status=1, presence=1 (sama dengan promo lainnya)
+- [x] Logika kalkulasi di `payment.service.js` → `checkVoucherPromotion(grandTotal, storeOutletId)`
+- [x] INSERT ke `transaction_voucher` dilakukan di dalam `createTransaction()` (DB atomic transaction)
+- [x] `createTransaction()` menerima param `voucherPromotion` baru, insert `transaction_voucher` di step 7b
+- [x] Response `POST /api/payment/complete` ditambah field `voucher: { giftAmount, expDate, promotionId, promotionDescription }`
+- [x] Jika tidak ada promo voucher aktif / tidak memenuhi syarat minimum → `voucher: null`
+- [x] Verifikasi bug/syntax: `node --check` untuk `payment.service.js`, `transaction.service.js`, `payment.controller.js` (no errors)
+- Files yang diubah: `payment.service.js`, `transaction.service.js`, `payment.controller.js`
 ---
 
 ## 4. Cart / Active Transaction — `/api/cart/*` (F2)
@@ -284,6 +311,9 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 ### 7a. Payment Types & Basic
 
 - [x] `GET /api/payment/types` — List available payment types (from `payment_type`, filtered `isLock=1`)
+- [x] `GET /api/payment/types/all` — List payment types for settings page (all rows from `payment_type`)
+- [x] `GET /api/payment/types/:id` — Get payment type detail (full row)
+- [x] `PUT /api/payment/types/:id` — Update payment type detail fields
 - [x] `GET /api/payment/pending/:kioskUuid` — Get current paid entries from `kiosk_paid_pos`
 - [x] `POST /api/payment/add` — Add payment entry to `kiosk_paid_pos`; returns updated list + totalPaid
   - Support split payment (multiple entries per kioskUuid)
@@ -330,6 +360,8 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 
 - [x] Payment service: getTypes, addPayment, removePayment, finalizeTransaction
 - [x] Payment schema: Zod validation (addPaymentSchema, finalizeSchema)
+- [x] Payment service settings support: `getAllPaymentTypes`, `getPaymentTypeById`, `updatePaymentTypeById`
+- [x] Payment schema settings support: `updatePaymentTypeSchema` (field validation for payment type detail update)
 - [ ] Tax calculation helper: calculateTax(items, taxcodeConfig)
 
 ---
@@ -456,6 +488,22 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
   - Used by: transaction, kiosk, settlement, reset, refund, exchange
 
 ---
+
+
+
+## 16. Printing
+controller baru khusus print, print log, printer POS termal dan lain-lain
+
+### 16.1 Printing Log
+[x] jika tekan tombol print maka akan tercatat / insert ke table `transaction_printlog`
+[x] buat router dan controller baru `print.controller.js`
+- [x] Endpoint baru: `POST /api/print/transaction/:transactionId/log` (auth required)
+- [x] File baru: `src/controllers/print.controller.js`, `src/routes/print.routes.js`, `src/services/print.service.js`
+- [x] `src/server.js` sudah register route `app.use('/api/print', printRoutes)`
+
+### 16.2 Printer termal POS
+[ ] code printer COM ke POS Printer termal
+
 
 ## Fitur Wajib Ditambah (Rekomendasi AI)
 
