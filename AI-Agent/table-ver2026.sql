@@ -66,30 +66,32 @@ CREATE TABLE IF NOT EXISTS `auto_number` (
   `prefix` varchar(50) DEFAULT NULL,
   `digit` int(11) NOT NULL DEFAULT 6,
   `runningNumber` int(11) NOT NULL DEFAULT 0,
-  `updateDate` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=305 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  `updateDate` datetime DEFAULT '2026-01-01 00:00:00',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=1001 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.auto_number: ~18 rows (approximately)
+-- Dumping data for table pos_supermarket.auto_number: ~19 rows (approximately)
 INSERT INTO `auto_number` (`id`, `name`, `prefix`, `digit`, `runningNumber`, `updateDate`) VALUES
-	(1, 'brand', 'BND', 4, 26, 1657258458),
-	(2, 'terminal', 'T', 4, 19, 1668759062),
-	(3, 'taxCode', 'TAX', 4, 9, 1657280513),
-	(4, 'branched', 'BN', 4, 9, 1657267586),
-	(5, 'outlet', 'OD', 4, 36, 1657790756),
-	(6, 'idPayment', 'ID', 4, 10, 1681281223),
-	(7, 'uom', 'UOM', 4, 11, 1657281222),
-	(10, 'item', 'TM', 9, 3, 1657781787),
-	(11, 'user', 'S', 6, 1, 1657258458),
-	(100, 'promotion', 'PR', 6, 11, 1658813889),
-	(200, 'transaction', '', 4, 156, 1775640829),
-	(201, 'kiosk', NULL, 9, 48869, 1701431691),
-	(220, 'reset', 'RST', 6, 258, 1775642219),
-	(300, 'kioskUuid', 'BILL', 9, 11902, 1692178227),
-	(301, 'settlement', 'SET', 6, 39, 1753687185),
-	(302, 'pos', NULL, 4, 295, 1775641649),
-	(303, 'refund', 'REF', 6, 49, 1701431691),
-	(304, 'exchange', 'EXC', 6, 34, 1697626014);
+	(1, 'brand', 'BND', 4, 26, '2026-01-01 00:00:00'),
+	(2, 'terminal', 'T', 4, 19, '2026-01-01 00:00:00'),
+	(3, 'taxCode', 'TAX', 4, 9, '2026-01-01 00:00:00'),
+	(4, 'branched', 'BN', 4, 9, '2026-01-01 00:00:00'),
+	(5, 'outlet', 'OD', 4, 36, '2026-01-01 00:00:00'),
+	(6, 'idPayment', 'ID', 4, 10, '2026-01-01 00:00:00'),
+	(7, 'uom', 'UOM', 4, 11, '2026-01-01 00:00:00'),
+	(10, 'item', 'TM', 9, 3, '2026-01-01 00:00:00'),
+	(11, 'user', 'S', 6, 1, '2026-01-01 00:00:00'),
+	(100, 'promotion', 'PR', 6, 11, '2026-01-01 00:00:00'),
+	(200, 'transaction', '', 4, 158, '0000-00-00 00:00:00'),
+	(201, 'kiosk', NULL, 9, 48869, '2026-01-01 00:00:00'),
+	(220, 'reset', 'RST', 6, 258, '2026-01-01 00:00:00'),
+	(300, 'kioskUuid', 'BILL', 9, 11902, '2026-01-01 00:00:00'),
+	(301, 'settlement', 'SET', 6, 39, '2026-01-01 00:00:00'),
+	(302, 'pos', NULL, 4, 297, '0000-00-00 00:00:00'),
+	(303, 'refund', 'REF', 6, 49, '2026-01-01 00:00:00'),
+	(304, 'exchange', 'EXC', 6, 34, '2026-01-01 00:00:00'),
+	(1000, 'voucherCode', 'VCODE', 6, 5, '0000-00-00 00:00:00');
 
 -- Dumping structure for table pos_supermarket.balance
 CREATE TABLE IF NOT EXISTS `balance` (
@@ -105,9 +107,9 @@ CREATE TABLE IF NOT EXISTS `balance` (
   `close` int(1) NOT NULL DEFAULT 0,
   `input_date` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.balance: ~24 rows (approximately)
+-- Dumping data for table pos_supermarket.balance: ~25 rows (approximately)
 INSERT INTO `balance` (`id`, `resetId`, `cashIn`, `cashOut`, `transactionId`, `kioskUuid`, `cashierId`, `terminalId`, `settlementId`, `close`, `input_date`) VALUES
 	(29, 'RST000252', 500000, -75000, '123123.0141', 'T01.260402.0263', '123123', 'T01', '', 1, '2026-04-02 08:51:57'),
 	(30, 'RST000252', 200000, 0, '', '', '123123', 'T01', '', 0, '2026-04-02 15:52:41'),
@@ -132,7 +134,9 @@ INSERT INTO `balance` (`id`, `resetId`, `cashIn`, `cashOut`, `transactionId`, `k
 	(49, 'RST000255', 123, 0, 'RST000255', '', 'dev-user', 'T01', '', 1, '2026-04-08 16:47:12'),
 	(50, 'RST000256', 333, 0, 'RST000256', '', 'dev-user', 'T01', '', 1, '2026-04-08 16:50:10'),
 	(51, 'RST000257', 444, 0, 'RST000257', '', 'dev-user', 'T01', '', 1, '2026-04-08 16:51:19'),
-	(52, 'RST000258', 111, 0, 'RST000258', '', 'dev-user', 'T01', '', 0, '2026-04-08 16:56:59');
+	(52, 'RST000258', 111, 0, 'RST000258', '', 'dev-user', 'T01', '', 0, '2026-04-08 16:56:59'),
+	(53, 'RST000258', 1050000, 0, '123123.0157', 'T01.260408.0295', '123123', 'T01', '', 0, '2026-04-09 10:17:28'),
+	(54, 'RST000258', 470000, -50000, '123123.0158', 'T01.260409.0296', '123123', 'T01', '', 0, '2026-04-09 11:08:19');
 
 -- Dumping structure for table pos_supermarket.cash_declaration
 CREATE TABLE IF NOT EXISTS `cash_declaration` (
@@ -712,9 +716,9 @@ CREATE TABLE IF NOT EXISTS `kiosk_cart` (
   `inputDate` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
   `updateDate` datetime NOT NULL DEFAULT '2023-01-01 00:00:00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=658 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=668 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.kiosk_cart: ~39 rows (approximately)
+-- Dumping data for table pos_supermarket.kiosk_cart: ~49 rows (approximately)
 INSERT INTO `kiosk_cart` (`id`, `kioskUuid`, `promotionId`, `promotionItemId`, `promotionFreeId`, `promotionDiscountId`, `itemId`, `barcode`, `originPrice`, `discount`, `price`, `memberDiscountPercent`, `memberDiscountAmount`, `validationNota`, `isPriceEdit`, `isFreeItem`, `isSpecialPrice`, `isPrintOnBill`, `photo`, `void`, `note`, `presence`, `updateBy`, `inputDate`, `updateDate`) VALUES
 	(476, 'T01.260407.0276', 'occella5', 8, NULL, NULL, '899123456740', '899123456740', 130000, 65000, 65000, 0, 0, 0, 0, '', 0, 1, NULL, 1, '[void] manual void item', 1, NULL, '2026-04-07 08:07:45', '2026-04-07 08:07:45'),
 	(477, 'T01.260407.0276', 'occella5', 8, NULL, NULL, '899123456740', '899123456740', 130000, 65000, 65000, 0, 0, 0, 0, '', 0, 1, NULL, 1, '[void] manual void item', 1, NULL, '2026-04-07 08:09:11', '2026-04-07 08:09:11'),
@@ -754,7 +758,17 @@ INSERT INTO `kiosk_cart` (`id`, `kioskUuid`, `promotionId`, `promotionItemId`, `
 	(654, 'T01.260408.0293', NULL, NULL, NULL, NULL, '899123456731', '899123456731', 285000, 0, 285000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-08 09:30:28', '2026-04-08 09:30:28'),
 	(655, 'T01.260408.0293', 'occella4', 7, NULL, NULL, '899123456730', '899123456730', 310000, 136400, 173600, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-08 09:30:33', '2026-04-08 09:30:33'),
 	(656, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', '899123456703', 175000, 0, 175000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-08 10:07:24', '2026-04-08 10:07:24'),
-	(657, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', NULL, 175000, 0, 0, 0, 0, 0, 0, '1', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-08 10:07:24', '2026-04-08 10:07:24');
+	(657, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', NULL, 175000, 0, 0, 0, 0, 0, 0, '1', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-08 10:07:24', '2026-04-08 10:07:24'),
+	(658, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', '899123456703', 175000, 0, 175000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:17:22', '2026-04-09 10:17:22'),
+	(659, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', '899123456703', 175000, 0, 175000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:17:22', '2026-04-09 10:17:22'),
+	(660, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', '899123456703', 175000, 0, 175000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:17:22', '2026-04-09 10:17:22'),
+	(661, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', '899123456703', 175000, 0, 175000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:17:22', '2026-04-09 10:17:22'),
+	(662, 'T01.260408.0295', 'occella1', NULL, 9912, NULL, '899123456703', '899123456703', 175000, 0, 175000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:17:22', '2026-04-09 10:17:22'),
+	(663, 'T01.260409.0296', 'occella1', NULL, 9911, NULL, '899123456702', '899123456702', 210000, 0, 210000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:22:27', '2026-04-09 10:22:27'),
+	(664, 'T01.260409.0296', 'occella1', NULL, 9911, NULL, '899123456702', NULL, 210000, 0, 0, 0, 0, 0, 0, '1', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:22:27', '2026-04-09 10:22:27'),
+	(665, 'T01.260409.0296', 'occella1', NULL, 9911, NULL, '899123456702', '899123456702', 210000, 0, 210000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 10:22:32', '2026-04-09 10:22:32'),
+	(666, 'T01.260409.0297', 'occella1', NULL, 9912, NULL, '899123456703', '899123456703', 175000, 0, 175000, 0, 0, 0, 0, '', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 11:20:38', '2026-04-09 11:20:38'),
+	(667, 'T01.260409.0297', 'occella1', NULL, 9912, NULL, '899123456703', NULL, 175000, 0, 0, 0, 0, 0, 0, '1', 0, 1, NULL, 0, NULL, 1, NULL, '2026-04-09 11:20:38', '2026-04-09 11:20:38');
 
 -- Dumping structure for table pos_supermarket.kiosk_cart_free_item
 CREATE TABLE IF NOT EXISTS `kiosk_cart_free_item` (
@@ -778,9 +792,9 @@ CREATE TABLE IF NOT EXISTS `kiosk_cart_free_item` (
   `updateDate` varchar(50) DEFAULT NULL,
   `updateBy` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=214 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=216 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.kiosk_cart_free_item: ~7 rows (approximately)
+-- Dumping data for table pos_supermarket.kiosk_cart_free_item: ~9 rows (approximately)
 INSERT INTO `kiosk_cart_free_item` (`id`, `kioskUuid`, `promotionId`, `promotionFreeId`, `itemId`, `freeItemId`, `kioskCartId`, `useBykioskUuidId`, `originPrice`, `barcode`, `scanFree`, `price`, `printOnBill`, `void`, `status`, `presence`, `inputDate`, `updateDate`, `updateBy`) VALUES
 	(206, 'T01.260408.0289', 'occella1', 9913, '899123456704', '899123456706', '635', NULL, 150000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-08 05:48:58', '2026-04-08 05:48:58', NULL),
 	(207, 'T01.260408.0289', 'occella1', 9914, '899123456705', '899123456706', '639', NULL, 150000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-08 05:49:10', '2026-04-08 05:49:10', NULL),
@@ -788,7 +802,9 @@ INSERT INTO `kiosk_cart_free_item` (`id`, `kioskUuid`, `promotionId`, `promotion
 	(209, 'T01.260408.0291', 'occella1', 9913, '899123456704', '899123456706', '646', NULL, 150000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-08 09:13:14', '2026-04-08 09:13:14', NULL),
 	(210, 'T01.260408.0292', 'occella1', 9913, '899123456704', '899123456706', '648', NULL, 150000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-08 09:18:03', '2026-04-08 09:18:03', NULL),
 	(211, 'T01.260408.0292', 'occella1', 9913, '899123456704', '899123456706', '650', NULL, 150000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-08 09:18:29', '2026-04-08 09:18:29', NULL),
-	(213, 'T01.260408.0295', 'occella1', 9912, '899123456703', '899123456703', '657', NULL, 175000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-08 10:07:24', '2026-04-08 10:07:24', NULL);
+	(213, 'T01.260408.0295', 'occella1', 9912, '899123456703', '899123456703', '657', NULL, 175000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-08 10:07:24', '2026-04-08 10:07:24', NULL),
+	(214, 'T01.260409.0296', 'occella1', 9911, '899123456702', '899123456702', '664', NULL, 210000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-09 10:22:27', '2026-04-09 10:22:27', NULL),
+	(215, 'T01.260409.0297', 'occella1', 9912, '899123456703', '899123456703', '667', NULL, 175000, NULL, 0, 0, 0, 0, 1, 1, '2026-04-09 11:20:38', '2026-04-09 11:20:38', NULL);
 
 -- Dumping structure for table pos_supermarket.kiosk_paid_pos
 CREATE TABLE IF NOT EXISTS `kiosk_paid_pos` (
@@ -808,7 +824,7 @@ CREATE TABLE IF NOT EXISTS `kiosk_paid_pos` (
   `input_date` datetime DEFAULT '2023-01-01 00:00:00',
   `update_date` datetime DEFAULT '2023-01-01 00:00:00',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=83 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table pos_supermarket.kiosk_paid_pos: ~0 rows (approximately)
 
@@ -831,7 +847,7 @@ CREATE TABLE IF NOT EXISTS `kiosk_uuid` (
   PRIMARY KEY (`kioskUuid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.kiosk_uuid: ~15 rows (approximately)
+-- Dumping data for table pos_supermarket.kiosk_uuid: ~17 rows (approximately)
 INSERT INTO `kiosk_uuid` (`kioskUuid`, `exchange`, `cashierId`, `terminalId`, `storeOutlesId`, `memberId`, `photo`, `ilock`, `presence`, `status`, `inputDate`, `startDate`, `input_date`, `update_date`) VALUES
 	('T01.260407.0276', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 0, 1775548269, '2023-01-01 00:00:00', '2026-04-07 07:51:09', '2026-04-07 09:15:00'),
 	('T01.260407.0277', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 1, 1775548729, '2023-01-01 00:00:00', '2026-04-07 07:58:49', '2026-04-07 07:58:49'),
@@ -847,7 +863,9 @@ INSERT INTO `kiosk_uuid` (`kioskUuid`, `exchange`, `cashierId`, `terminalId`, `s
 	('T01.260408.0291', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 0, 1775633305, '2023-01-01 00:00:00', '2026-04-08 07:28:25', '2026-04-08 09:13:28'),
 	('T01.260408.0292', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 0, 1775639629, '2023-01-01 00:00:00', '2026-04-08 09:13:49', '2026-04-08 09:20:50'),
 	('T01.260408.0293', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 0, 1775640219, '2023-01-01 00:00:00', '2026-04-08 09:23:39', '2026-04-08 09:33:49'),
-	('T01.260408.0295', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 1, 1775641649, '2023-01-01 00:00:00', '2026-04-08 09:47:29', '2026-04-08 09:47:29');
+	('T01.260408.0295', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 0, 1775641649, '2023-01-01 00:00:00', '2026-04-08 09:47:29', '2026-04-09 10:17:28'),
+	('T01.260409.0296', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 0, 1775730135, '2023-01-01 00:00:00', '2026-04-09 10:22:15', '2026-04-09 11:08:19'),
+	('T01.260409.0297', '', '123123', 'T01', 'OT99', NULL, NULL, 0, 1, 1, 1775733630, '2023-01-01 00:00:00', '2026-04-09 11:20:30', '2026-04-09 11:20:30');
 
 -- Dumping structure for table pos_supermarket.member
 CREATE TABLE IF NOT EXISTS `member` (
@@ -998,18 +1016,17 @@ CREATE TABLE IF NOT EXISTS `payment_type` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.payment_type: ~10 rows (approximately)
+-- Dumping data for table pos_supermarket.payment_type: ~9 rows (approximately)
 INSERT INTO `payment_type` (`id`, `openCashDrawer`, `edc`, `label`, `name`, `connectionType`, `com`, `ip`, `port`, `apikey`, `mId`, `nmId`, `merchant`, `timeout`, `image`, `apiUrl`, `apiUrlStatus`, `isLock`, `status`, `presence`, `inputBy`, `inputDate`, `updateBy`, `updateDate`) VALUES
-	('BCA01', 0, 0, 'BCA CARD ERC', 'BCA Debit', '', '', '', '', '', '', '', '', 0, 'http://192.168.202.72/imgs/debit-card.jpg', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '1', '0000-00-00 00:00:00'),
-	('BCA31', 0, 0, 'BCA QRIS', 'BCA QRIS', '', '', '', '', '', '', '', '', 0, 'http://192.168.202.72/imgs/QRIS-BCA.jpg', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '1', '0000-00-00 00:00:00'),
-	('CASH', 1, 0, 'CASH', 'CASH', '', '', '', '', '', '', '', '', 0, '', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
-	('DEBITCC', 0, 0, 'MANUAL DEBIT CARD', 'DEBIT, VISA, MASTERCARD', '', '', '', '', '', '', '', '', 0, '', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
-	('DISC.BILL', 0, 0, 'DISCOUNT BILL', 'DISCOUNT BILL', '', '', '', '', '', '', '', '', 0, '', '', '', 1, 0, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
-	('EDC_BCA', 0, 1, 'BCA EDC', 'BCA EDC', '', 'COM5', '', '', '', '', '', '', 0, './assets/logo/bca.png', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
-	('EDC_BRI', 0, 1, 'BRI EDC', 'BRI EDC', '', '', '', '', '', '', '', '', 0, './assets/logo/bri.png', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
-	('EDC_MANDIRI', 0, 1, 'Mandiri EDC', 'Mandiri EDC', '', 'COM8', '', '', '', '', '', '', 0, './assets/logo/mandiri.png', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
-	('QRISTELKOM', 0, 0, 'QRIS TELKOM', 'CHANDRA SUPERSTORE', '', '', '', '', '139139211206273', '195268799679', 'ID2022218237529', 'MITRALINK SOLUSI', 30, './assets/logo/qrisTelkom.png', 'https://qris.id/restapi/qris/show_qris.php', 'https://qris.id/restapi/qris/checkpaid_qris.php', 1, 0, 1, '1', '0000-00-00 00:00:00', '1', '0000-00-00 00:00:00'),
-	('VOUCHER', 0, 0, 'VOUCHER', 'VOUCHER', '', '', '', '', '', '', '', '', 0, '', '', '', 1, 0, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00');
+	('BCA01', 0, 1, 'BCA CARD ERC', 'BCA Debit', 'COM', 'COM3', '', '', '', '', '', '', 0, 'usb', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '1', '2026-04-08 17:40:10'),
+	('BCA31', 0, 0, 'BCA QRIS', 'BCA QRIS', 'COM', 'COM3', '', '', '', '', '', '', 0, 'usb', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '1', '0000-00-00 00:00:00'),
+	('CASH', 1, 0, 'CASH', 'CASH', '', '', '', '', '', '', '', '', 0, 'payments', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
+	('DEBITCC', 0, 0, 'MANUAL DEBIT CARD', 'DEBIT, VISA, MASTERCARD', '', '', '', '', '', '', '', '', 0, 'credit_card', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
+	('EDC_BCA', 0, 1, 'BCA EDC', 'BCA EDC', 'COM', 'COM5', '', '', '', '', '', '', 0, 'usb', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
+	('EDC_BRI', 0, 1, 'BRI EDC', 'BRI EDC', 'MANUAL', '', '', '', '', '', '', '', 0, 'usb', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
+	('EDC_MANDIRI', 0, 1, 'Mandiri EDC', 'Mandiri EDC', 'COM', 'COM8', '', '', '', '', '', '', 0, 'usb', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '0000-00-00 00:00:00'),
+	('QRISTELKOM', 0, 0, 'QRIS TELKOM', 'CHANDRA SUPERSTORE', '', '', '', '', '139139211206273', '195268799679', 'ID2022218237529', 'MITRALINK SOLUSI', 30, 'qr_code_2', 'https://qris.id/restapi/qris/show_qris.php', 'https://qris.id/restapi/qris/checkpaid_qris.php', 1, 1, 1, '1', '0000-00-00 00:00:00', '1', '0000-00-00 00:00:00'),
+	('VOUCHER', 0, 0, 'VOUCHER', 'VOUCHER', '', '', '', '', '', '', '', '', 0, 'redeem', '', '', 1, 1, 1, '', '0000-00-00 00:00:00', '', '2026-04-08 17:50:18');
 
 -- Dumping structure for table pos_supermarket.promotion
 CREATE TABLE IF NOT EXISTS `promotion` (
@@ -1044,7 +1061,7 @@ CREATE TABLE IF NOT EXISTS `promotion` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.promotion: ~13 rows (approximately)
+-- Dumping data for table pos_supermarket.promotion: ~12 rows (approximately)
 INSERT INTO `promotion` (`id`, `typeOfPromotion`, `storeOutlesId`, `code`, `description`, `startDate`, `endDate`, `discountPercent`, `discountAmount`, `requiredVoucherMinAmount`, `requiredVoucherAllowMultyple`, `voucherMinAmount`, `voucherAllowMultyple`, `voucherGiftAmount`, `voucherExpDate`, `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat`, `Sun`, `status`, `presence`, `inputDate`, `inputBy`, `updateDate`, `updateBy`) VALUES
 	('buy2get1', 'promotion_discount', NULL, NULL, 'Buy 2 Get 1', '2026-01-01 00:00:00', '2026-12-23 23:55:55', NULL, NULL, 0, 1, 0, 0, 0, '2029-01-01', 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL),
 	('occella1', 'promotion_free', NULL, NULL, 'Promo Buy 1 Get 1', '2026-01-01 00:00:00', '2026-12-23 23:55:55', NULL, NULL, 0, 1, 0, 0, 0, '2029-01-01', 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, NULL, NULL, NULL),
@@ -1211,7 +1228,7 @@ CREATE TABLE IF NOT EXISTS `reset` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.reset: ~10 rows (approximately)
+-- Dumping data for table pos_supermarket.reset: ~9 rows (approximately)
 INSERT INTO `reset` (`id`, `userIdStart`, `userIdClose`, `storeOutlesId`, `startDate`, `endDate`, `totalTransaction`, `summaryTotalVoid`, `summaryTotalTransaction`, `summaryTotalCart`, `overalitemSales`, `overalDiscount`, `overalNetSales`, `overalFinalPrice`, `overalTax`, `note`, `presence`, `inputDate`, `inputBy`, `updateDate`, `updateBy`) VALUES
 	('RST000249', '123123', '123123', 'OT99', '2026-04-02 14:00:47', '2026-04-02 14:17:17', 1, 0, 125000, 125000, 125000, 0, 125000, 125000, 0, NULL, 1, '2026-04-02 14:00:47', 'dev-user', '2026-04-02 14:17:17', 'dev-user'),
 	('RST000250', '123123', '123213', 'OT99', '2026-04-02 14:24:01', '2026-04-02 14:46:33', 1, 0, 420000, 420000, 420000, 0, 420000, 420000, 0, NULL, 1, '2026-04-02 14:24:01', 'dev-user', '2026-04-02 14:46:33', 'dev-user'),
@@ -1234,7 +1251,7 @@ CREATE TABLE IF NOT EXISTS `reset_payment` (
   `presence` int(11) NOT NULL DEFAULT 1,
   `inputDate` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- Dumping data for table pos_supermarket.reset_payment: ~12 rows (approximately)
 INSERT INTO `reset_payment` (`id`, `resetId`, `paymentTypeId`, `qty`, `paidAmount`, `presence`, `inputDate`) VALUES
@@ -1395,7 +1412,7 @@ CREATE TABLE IF NOT EXISTS `transaction` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.transaction: ~36 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction: ~38 rows (approximately)
 INSERT INTO `transaction` (`id`, `transactionDate`, `transaction_date`, `kioskUuid`, `resetId`, `settlementId`, `memberId`, `paymentTypeId`, `storeOutlesId`, `terminalId`, `struk`, `total`, `locked`, `startDate`, `endDate`, `cashierId`, `pthType`, `subTotal`, `discount`, `discountMember`, `voucher`, `bkp`, `dpp`, `ppn`, `nonBkp`, `finalPrice`, `photo`, `userId`, `cashDrawer`, `printing`, `presence`, `inputDate`, `input_date`, `updateDate`, `update_date`) VALUES
 	('123123.0121', 1705316417, '2024-01-15 18:00:17', 'UATx1.240115.0217', NULL, 'T01SET000039', NULL, '', 'Comingsoon', 'UATx1', '123123.0121', 157500, 1, '2023-01-01 00:00:00.000', '2024-01-15 18:00:17.000', '123123', 1, 0, 0, 0, 0, 141892, 157500, 15608, 0, 157500, NULL, NULL, 1, 1, 1, 1705316417, '2024-01-15 18:00:17', 1705316417, '2024-01-15 18:00:17'),
 	('123123.0122', 1705568554, '2024-01-18 16:02:34', 'UATx1.240117.0218', NULL, 'T01SET000039', NULL, '', 'Comingsoon', 'UATx1', '123123.0122', 22500, 1, '2023-01-01 00:00:00.000', '2024-01-18 16:02:34.000', '123123', 1, 0, 0, 0, 0, 20271, 22500, 2229, 0, 22500, NULL, NULL, 1, 1, 1, 1705568554, '2024-01-18 16:02:34', 1705568554, '2024-01-18 16:02:34'),
@@ -1432,7 +1449,9 @@ INSERT INTO `transaction` (`id`, `transactionDate`, `transaction_date`, `kioskUu
 	('123123.0153', 1775631826, '2026-04-08 07:03:46', 'T01.260408.0290', 'RST000254', '', NULL, NULL, 'OT99', 'T01', '123123.0153', 480000, 1, '2023-01-01 00:00:00.000', '2026-04-08 07:03:46.000', '123123', 1, 480000, 0, 0, 0, 0, 0, 0, 0, 480000, NULL, NULL, 1, 1, 1, 1775631826, '2026-04-08 07:03:46', 1775631826, '2026-04-08 07:03:46'),
 	('123123.0154', 1775639608, '2026-04-08 09:13:28', 'T01.260408.0291', 'RST000254', '', NULL, NULL, 'OT99', 'T01', '123123.0154', 640000, 1, '2023-01-01 00:00:00.000', '2026-04-08 09:13:28.000', '123123', 1, 640000, 0, 0, 0, 0, 0, 0, 0, 640000, NULL, NULL, 1, 1, 1, 1775639608, '2026-04-08 09:13:28', 1775639608, '2026-04-08 09:13:28'),
 	('123123.0155', 1775640050, '2026-04-08 09:20:50', 'T01.260408.0292', 'RST000254', '', NULL, NULL, 'OT99', 'T01', '123123.0155', 640000, 1, '2023-01-01 00:00:00.000', '2026-04-08 09:20:50.000', '123123', 1, 640000, 0, 0, 0, 0, 0, 0, 0, 640000, NULL, NULL, 1, 1, 1, 1775640050, '2026-04-08 09:20:50', 1775640050, '2026-04-08 09:20:50'),
-	('123123.0156', 1775640829, '2026-04-08 09:33:49', 'T01.260408.0293', 'RST000254', '', NULL, NULL, 'OT99', 'T01', '123123.0156', 322200, 1, '2023-01-01 00:00:00.000', '2026-04-08 09:33:49.000', '123123', 1, 458600, 136400, 0, 0, 0, 0, 0, 0, 322200, NULL, NULL, 1, 1, 1, 1775640829, '2026-04-08 09:33:49', 1775640829, '2026-04-08 09:33:49');
+	('123123.0156', 1775640829, '2026-04-08 09:33:49', 'T01.260408.0293', 'RST000254', '', NULL, NULL, 'OT99', 'T01', '123123.0156', 322200, 1, '2023-01-01 00:00:00.000', '2026-04-08 09:33:49.000', '123123', 1, 458600, 136400, 0, 0, 0, 0, 0, 0, 322200, NULL, NULL, 1, 1, 1, 1775640829, '2026-04-08 09:33:49', 1775640829, '2026-04-08 09:33:49'),
+	('123123.0157', 1775729848, '2026-04-09 10:17:28', 'T01.260408.0295', 'RST000258', '', NULL, NULL, 'OT99', 'T01', '123123.0157', 1050000, 1, '2023-01-01 00:00:00.000', '2026-04-09 10:17:28.000', '123123', 1, 1050000, 0, 0, 0, 0, 0, 0, 0, 1050000, NULL, NULL, 1, 1, 1, 1775729848, '2026-04-09 10:17:28', 1775729848, '2026-04-09 10:17:28'),
+	('123123.0158', 1775732899, '2026-04-09 11:08:19', 'T01.260409.0296', 'RST000258', '', NULL, NULL, 'OT99', 'T01', '123123.0158', 420000, 1, '2023-01-01 00:00:00.000', '2026-04-09 11:08:19.000', '123123', 1, 420000, 0, 0, 0, 0, 0, 0, 0, 420000, NULL, NULL, 1, 1, 1, 1775732899, '2026-04-09 11:08:19', 1775732899, '2026-04-09 11:08:19');
 
 -- Dumping structure for table pos_supermarket.transaction_detail
 CREATE TABLE IF NOT EXISTS `transaction_detail` (
@@ -1463,9 +1482,9 @@ CREATE TABLE IF NOT EXISTS `transaction_detail` (
   `updateDate` int(11) DEFAULT NULL,
   `updateBy` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.transaction_detail: ~119 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction_detail: ~122 rows (approximately)
 INSERT INTO `transaction_detail` (`id`, `transactionId`, `promotionId`, `promotionFreeId`, `promotionItemId`, `promotionDiscountId`, `itemId`, `barcode`, `originPrice`, `price`, `discount`, `memberDiscountAmount`, `memberDiscountPercent`, `validationNota`, `isPriceEdit`, `isFreeItem`, `isSpecialPrice`, `isPrintOnBill`, `note`, `void`, `refund`, `exchange`, `presence`, `inputDate`, `updateDate`, `updateBy`) VALUES
 	(1, '123123.0121', '0', NULL, 0, NULL, '0070024', '0070024', 22500, 22500, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1705316376, 1705316417, NULL),
 	(2, '123123.0121', '0', NULL, NULL, NULL, '0070024', '0070024', 22500, 22500, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1705316385, 1705316417, NULL),
@@ -1585,7 +1604,17 @@ INSERT INTO `transaction_detail` (`id`, `transactionId`, `promotionId`, `promoti
 	(124, '123123.0155', '0', NULL, NULL, NULL, '899123456704', '899123456704', 320000, 320000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775640050, 1775640050, NULL),
 	(125, '123123.0155', '0', NULL, NULL, NULL, '899123456706', '899123456706', 150000, 0, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775640050, 1775640050, NULL),
 	(126, '123123.0156', '0', NULL, NULL, NULL, '899123456731', '899123456731', 285000, 285000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775640829, 1775640829, NULL),
-	(127, '123123.0156', '0', NULL, NULL, NULL, '899123456730', '899123456730', 310000, 173600, 136400, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775640829, 1775640829, NULL);
+	(127, '123123.0156', '0', NULL, NULL, NULL, '899123456730', '899123456730', 310000, 173600, 136400, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775640829, 1775640829, NULL),
+	(128, '123123.0157', '0', NULL, NULL, NULL, '899123456703', '899123456703', 175000, 175000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775729848, 1775729848, NULL),
+	(129, '123123.0157', '0', NULL, NULL, NULL, '899123456703', '899123456703', 175000, 0, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775729848, 1775729848, NULL),
+	(130, '123123.0157', '0', NULL, NULL, NULL, '899123456703', '899123456703', 175000, 175000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775729848, 1775729848, NULL),
+	(131, '123123.0157', '0', NULL, NULL, NULL, '899123456703', '899123456703', 175000, 175000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775729848, 1775729848, NULL),
+	(132, '123123.0157', '0', NULL, NULL, NULL, '899123456703', '899123456703', 175000, 175000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775729848, 1775729848, NULL),
+	(133, '123123.0157', '0', NULL, NULL, NULL, '899123456703', '899123456703', 175000, 175000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775729848, 1775729848, NULL),
+	(134, '123123.0157', '0', NULL, NULL, NULL, '899123456703', '899123456703', 175000, 175000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775729848, 1775729848, NULL),
+	(135, '123123.0158', '0', NULL, NULL, NULL, '899123456702', '899123456702', 210000, 210000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775732899, 1775732899, NULL),
+	(136, '123123.0158', '0', NULL, NULL, NULL, '899123456702', '899123456702', 210000, 0, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775732899, 1775732899, NULL),
+	(137, '123123.0158', '0', NULL, NULL, NULL, '899123456702', '899123456702', 210000, 210000, 0, 0, 0, 0, 0, '', 0, 1, '', 0, '', '', 1, 1775732899, 1775732899, NULL);
 
 -- Dumping structure for table pos_supermarket.transaction_payment
 CREATE TABLE IF NOT EXISTS `transaction_payment` (
@@ -1604,9 +1633,9 @@ CREATE TABLE IF NOT EXISTS `transaction_payment` (
   `input_date` datetime DEFAULT '2023-01-01 00:00:00',
   `update_date` datetime DEFAULT '2023-01-01 00:00:00',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=188 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=191 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.transaction_payment: ~67 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction_payment: ~65 rows (approximately)
 INSERT INTO `transaction_payment` (`id`, `transactionId`, `paymentTypeId`, `paymentNameId`, `amount`, `rounding`, `voucherNumber`, `approvedCode`, `refCode`, `presence`, `inputDate`, `updateDate`, `input_date`, `update_date`) VALUES
 	(72, '123123.0112', 'CASH', '', 20000, NULL, NULL, '', '', 1, 1704970878, 1704970878, '2024-01-11 18:01:18', '2024-01-11 18:01:18'),
 	(73, '123123.0112', 'CASH', '', 5000, NULL, NULL, '', '', 1, 1704970878, 1704970878, '2024-01-11 18:01:18', '2024-01-11 18:01:18'),
@@ -1681,7 +1710,10 @@ INSERT INTO `transaction_payment` (`id`, `transactionId`, `paymentTypeId`, `paym
 	(184, '123123.0153', 'CASH', '', 480000, NULL, '', '', '', 1, 1775631826, 1775631826, '2026-04-08 07:03:46', '2026-04-08 07:03:46'),
 	(185, '123123.0154', 'CASH', '', 640000, NULL, '', '', '', 1, 1775639608, 1775639608, '2026-04-08 09:13:28', '2026-04-08 09:13:28'),
 	(186, '123123.0155', 'CASH', '', 640000, NULL, '', '', '', 1, 1775640050, 1775640050, '2026-04-08 09:20:50', '2026-04-08 09:20:50'),
-	(187, '123123.0156', 'CASH', '', 458600, NULL, '', '', '', 1, 1775640829, 1775640829, '2026-04-08 09:33:49', '2026-04-08 09:33:49');
+	(187, '123123.0156', 'CASH', '', 458600, NULL, '', '', '', 1, 1775640829, 1775640829, '2026-04-08 09:33:49', '2026-04-08 09:33:49'),
+	(188, '123123.0157', 'CASH', '', 1050000, NULL, '', '', '', 1, 1775729848, 1775729848, '2026-04-09 10:17:28', '2026-04-09 10:17:28'),
+	(189, '123123.0158', 'DEBITCC', '', 50000, NULL, '', '39185', '', 1, 1775732899, 1775732899, '2026-04-09 11:08:19', '2026-04-09 11:08:19'),
+	(190, '123123.0158', 'CASH', '', 420000, NULL, '', '', '', 1, 1775732899, 1775732899, '2026-04-09 11:08:19', '2026-04-09 11:08:19');
 
 -- Dumping structure for table pos_supermarket.transaction_printlog
 CREATE TABLE IF NOT EXISTS `transaction_printlog` (
@@ -1692,7 +1724,7 @@ CREATE TABLE IF NOT EXISTS `transaction_printlog` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.transaction_printlog: ~13 rows (approximately)
+-- Dumping data for table pos_supermarket.transaction_printlog: ~12 rows (approximately)
 INSERT INTO `transaction_printlog` (`id`, `transactionId`, `inputDate`, `inputBy`) VALUES
 	(2, '123123.0153', '2026-04-08 08:56:57', 'dev-user'),
 	(3, '123123.0153', '2026-04-08 09:00:31', 'dev-user'),
@@ -1711,22 +1743,28 @@ INSERT INTO `transaction_printlog` (`id`, `transactionId`, `inputDate`, `inputBy
 -- Dumping structure for table pos_supermarket.transaction_voucher
 CREATE TABLE IF NOT EXISTS `transaction_voucher` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `transactionId` varchar(50) DEFAULT NULL,
+  `transactionId` varchar(50) NOT NULL DEFAULT '',
+  `voucherCode` varchar(50) NOT NULL DEFAULT '',
   `voucherMinAmount` double NOT NULL DEFAULT 0,
   `voucherAllowMultyple` double NOT NULL DEFAULT 0,
   `voucherGiftAmount` double NOT NULL DEFAULT 0,
   `voucherExpDate` datetime NOT NULL DEFAULT '2029-01-01 00:00:00',
+  `status` tinyint(4) NOT NULL DEFAULT 0,
+  `presence` tinyint(4) NOT NULL DEFAULT 1,
   `inputDate` datetime DEFAULT '2023-01-01 00:00:00',
   `inputBy` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `voucherCode` (`voucherCode`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.transaction_voucher: ~4 rows (approximately)
-INSERT INTO `transaction_voucher` (`id`, `transactionId`, `voucherMinAmount`, `voucherAllowMultyple`, `voucherGiftAmount`, `voucherExpDate`, `inputDate`, `inputBy`) VALUES
-	(2, '123123.0153', 100000, 1, 50000, '2029-10-10 00:00:00', '2026-04-08 07:03:46', '123123'),
-	(3, '123123.0154', 100000, 1, 100000, '2029-01-01 00:00:00', '2026-04-08 09:13:28', '123123'),
-	(4, '123123.0155', 100000, 1, 100000, '2029-01-01 00:00:00', '2026-04-08 09:20:50', '123123'),
-	(5, '123123.0156', 100000, 1, 50000, '2029-01-01 00:00:00', '2026-04-08 09:33:49', '123123');
+-- Dumping data for table pos_supermarket.transaction_voucher: ~6 rows (approximately)
+INSERT INTO `transaction_voucher` (`id`, `transactionId`, `voucherCode`, `voucherMinAmount`, `voucherAllowMultyple`, `voucherGiftAmount`, `voucherExpDate`, `status`, `presence`, `inputDate`, `inputBy`) VALUES
+	(2, '123123.0153', '123', 100000, 1, 50000, '2029-10-10 00:00:00', 0, 1, '2026-04-08 07:03:46', '123123'),
+	(3, '123123.0154', '234', 100000, 1, 100000, '2029-01-01 00:00:00', 0, 1, '2026-04-08 09:13:28', '123123'),
+	(4, '123123.0155', '345', 100000, 1, 100000, '2029-01-01 00:00:00', 0, 1, '2026-04-08 09:20:50', '123123'),
+	(5, '123123.0156', '456', 100000, 1, 50000, '2029-01-01 00:00:00', 0, 1, '2026-04-08 09:33:49', '123123'),
+	(6, '123123.0157', 'VCODE000004', 100000, 1, 150000, '2029-01-01 00:00:00', 0, 1, '2026-04-09 10:17:28', '123123'),
+	(7, '123123.0158', 'VCODE000005', 100000, 1, 50000, '2029-01-01 00:00:00', 0, 1, '2026-04-09 11:08:19', '123123');
 
 -- Dumping structure for table pos_supermarket.user
 CREATE TABLE IF NOT EXISTS `user` (
@@ -1829,36 +1867,24 @@ CREATE TABLE IF NOT EXISTS `user_pin` (
 INSERT INTO `user_pin` (`id`, `userId`, `pin`, `updateBy`, `updateDate`, `update_date`) VALUES
 	(1, '123456789', '4297f44b13955235245b2497399d7a93', NULL, NULL, '2023-01-01 00:00:00');
 
--- Dumping structure for table pos_supermarket.voucher
-CREATE TABLE IF NOT EXISTS `voucher` (
-  `id` varchar(50) NOT NULL DEFAULT '',
-  `voucherMasterId` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_general_ci NOT NULL DEFAULT '0',
-  `number` varchar(50) NOT NULL DEFAULT '0',
-  `amount` int(9) NOT NULL DEFAULT 0,
-  `status` int(11) NOT NULL DEFAULT 0,
-  `kioskUuid` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_general_ci NOT NULL DEFAULT '',
-  `transactionId` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_general_ci NOT NULL DEFAULT '',
-  `update_date` datetime NOT NULL DEFAULT '2024-01-01 00:00:00',
-  `input_date` datetime NOT NULL DEFAULT '2024-01-01 00:00:00',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `number` (`number`)
-) ENGINE=InnoDB DEFAULT CHARSET=armscii8 COLLATE=armscii8_bin;
+-- Dumping structure for table pos_supermarket.voucher_log
+CREATE TABLE IF NOT EXISTS `voucher_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `transactionId` varchar(50) NOT NULL DEFAULT '',
+  `voucherCode` varchar(50) NOT NULL DEFAULT '',
+  `voucherMinAmount` double NOT NULL DEFAULT 0,
+  `voucherAllowMultyple` double NOT NULL DEFAULT 0,
+  `voucherGiftAmount` double NOT NULL DEFAULT 0,
+  `voucherExpDate` datetime NOT NULL DEFAULT '2029-01-01 00:00:00',
+  `status` tinyint(4) NOT NULL DEFAULT 0,
+  `presence` tinyint(4) NOT NULL DEFAULT 1,
+  `inputDate` datetime DEFAULT '2023-01-01 00:00:00',
+  `inputBy` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `voucherCode` (`voucherCode`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Dumping data for table pos_supermarket.voucher: ~0 rows (approximately)
-
--- Dumping structure for table pos_supermarket.voucher_master
-CREATE TABLE IF NOT EXISTS `voucher_master` (
-  `id` varchar(50) NOT NULL DEFAULT '',
-  `name` varchar(50) CHARACTER SET armscii8 COLLATE armscii8_general_ci NOT NULL,
-  `amount` int(11) NOT NULL DEFAULT 0,
-  `donwload` int(3) NOT NULL DEFAULT 0,
-  `expDate` date DEFAULT '2026-01-01',
-  `filename` varchar(50) DEFAULT NULL,
-  `input_date` datetime NOT NULL DEFAULT '2024-01-01 00:00:00',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=armscii8 COLLATE=armscii8_bin;
-
--- Dumping data for table pos_supermarket.voucher_master: ~0 rows (approximately)
+-- Dumping data for table pos_supermarket.voucher_log: ~0 rows (approximately)
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

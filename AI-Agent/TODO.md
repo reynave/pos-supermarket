@@ -14,6 +14,9 @@
 - Filter promo header sudah menyesuaikan kolom `promotion.startDate` / `endDate` bertipe `DATETIME` dengan perbandingan `NOW()`.
 - `GET /api/cart/list/:kioskUuid` sudah mengembalikan `promotionId`, `promotionItemId`, dan `promotionName` per baris cart.
 - Payment type settings API sudah aktif: `GET /api/payment/types/all`, `GET /api/payment/types/:id`, `PUT /api/payment/types/:id`.
+- Auto number helper generik sudah tersedia di `src/utils/autoNumber.js` dan sudah dipakai untuk generate `voucherCode`.
+- API voucher sudah aktif: validasi read-only `GET /api/voucher/:voucherCode` dan submit `POST /api/voucher/use`.
+- Submit voucher sukses sekarang juga insert payment type `VOUCHER` ke `kiosk_paid_pos` dengan `approvedCode = voucherCode`.
 
 ---
 
@@ -191,12 +194,13 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [x] prioritas perhitungan diskon: `header_percent` -> `header_amount` -> `disc1/disc2/disc3` -> `detail_amount` -> `special_price`
 - [x] lookup promo sudah dipisah 2 query: `promotion_item` dulu, lalu `promotion` header
 - [x] filter tanggal promo memakai `DATETIME` (`NOW()`) dan tetap cek flag hari + outlet
-- [ ] Promotion discount pertahap  20% + 30% 
+- [x] Promotion discount pertahap  20% + 30% 
 
 ### 3.2 Promotion buy 1 get 1  [buy N get xN]
-- [ ] table header promotion ini global, 1st priority, promotion Id = 'promotion_free'
-- [ ] promotion_free for detail 
-- [ ] Logic summary (buy N get xN)
+> Status: [x] DONE — 2026-04-09 (API re-check)
+- [x] table header promotion ini global, 1st priority, promotion Id = 'promotion_free'
+- [x] promotion_free for detail 
+- [x] Logic summary (buy N get xN)
   - Header filter: `promotion.typeOfPromotion = promotion_free`, aktif by date/day/outlet, prioritas outlet spesifik lalu `startDate` terbaru.
   - Detail source: `promotion_free` (`id`, `promotionId`, `itemId`, `qty`, `freeItemId`, `freeQty`, `applyMultiply`, `scanFree`, `printOnBill`).
   - Entitlement formula:
@@ -210,12 +214,14 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
     - `promotionId = header promotion id`
     - `promotionFreeId = promotion_free.id`
     - `isFreeItem = 1` (atau nilai penanda free item konsisten sistem)
-  - Saat void/delete item trigger: hitung ulang entitlement; jika turun, free item berlebih harus ikut void/hilang dari `kiosk_cart`.
+  - Saat void/delete item trigger: pakai algoritma delete-all + reinsert qty sisa agar promo dihitung ulang dari nol (setara add barcode ulang), termasuk promo discount/header.
   - Anti-loop: item free tidak boleh dihitung sebagai trigger entitlement berikutnya.
-  - Reconcile point wajib dipanggil di flow add item, add qty, dan void item.
+  - Reconcile point aktif di flow add item & add qty; flow void item sekarang hard delete + add ulang qty sisa.
+  - API terkait yang sudah aktif: `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`, `POST /api/cart/voidItem/:kioskUuid`, `GET /api/cart/list/:kioskUuid`.
+  - Payload cart list sudah expose marker free item: `promotionFreeId`, `isFreeItem`, `originPrice`, `totalOriginPrice`.
  
-### 3.2 Promotion voucher min total X get voucher y
-> Status: [x] DONE — 2026-04-08
+### 3.3 Promotion voucher min total X get voucher y
+> Status: [x] DONE — 2026-04-09 (API re-check)
 - [x] voucher belanja untuk minimum total belanjaan sebesar x ( x >= requiredVoucherMinAmount), maka customer akan mendapakan voucher belanja sebesar y, dan bisa juga berkelipatan, jika belajanja 2x maka mendapankan 2y
 - [x] global promotion, typeOfPromotion = `voucher`
 - [x] Jika belanja >= requiredVoucherMinAmount, maka mendapatkan voucher senilai voucherGiftAmount
@@ -226,8 +232,12 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [x] `createTransaction()` menerima param `voucherPromotion` baru, insert `transaction_voucher` di step 7b
 - [x] Response `POST /api/payment/complete` ditambah field `voucher: { giftAmount, expDate, promotionId, promotionDescription }`
 - [x] Jika tidak ada promo voucher aktif / tidak memenuhi syarat minimum → `voucher: null`
+- [x] API trigger voucher sudah aktif di `POST /api/payment/complete` (controller hitung voucher, service simpan snapshot transaksi)
 - [x] Verifikasi bug/syntax: `node --check` untuk `payment.service.js`, `transaction.service.js`, `payment.controller.js` (no errors)
 - Files yang diubah: `payment.service.js`, `transaction.service.js`, `payment.controller.js`
+- [x] nomor voucher unique di-generate dari table `auto_number` (`voucherCode`) dan disimpan ke `transaction_voucher`
+- [x] Voucher validation API aktif: `GET /api/voucher/:voucherCode` (read-only validasi status/presence/expired)
+- [x] Voucher use API aktif: `POST /api/voucher/use` (update `transaction_voucher.status = 1` + insert snapshot ke `voucher_log`)
 ---
 
 ## 4. Cart / Active Transaction — `/api/cart/*` (F2)
@@ -242,11 +252,11 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
   - Lookup barcode → item
   - [~] Check active promotions
   - [x] `promotion_item` dan `promotion_discount` aktif pada alur add-to-cart
-  - [ ] `promotion_free` / buy-X-get-Y belum aktif
+  - [x] `promotion_free` / buy-X-get-Y sudah aktif
   - [x] Calculate price after discount
   - [x] Insert ke `kiosk_cart`
   - [x] Simpan `promotionId` dan `promotionItemId` ke `kiosk_cart`
-  - [ ] Handle free item → `kiosk_cart_free_item`
+  - [x] Handle free item → `kiosk_cart_free_item`
   - [ ] Emit Socket.IO `cart:update`
 - [x] `GET /api/cart/:kioskUuid` — Get current cart session info
 - [x] `GET /api/cart/list/:kioskUuid` — Get current cart items & totals
@@ -272,17 +282,14 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [~] Cart schema: Zod validation (scanSchema, updateItemSchema, dll)
   - [x] create cart schema tersedia
   - [ ] schema update/attach member/void item belum distandardisasi penuh
-
 ---
-
-
 
 ## 5. Promotion Engine — `/api/promotion/*` (F3)
 
 - [~] Promotion check aktif di flow add-to-cart (`POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`)
   - [x] Filter by: active date range, day-of-week, status, outlet
   - [x] Support Type 0: Item-level discount (`promotion_item`) — disc1/disc2/disc3, specialPrice, discountPrice
-  - [ ] Support Type 1: Buy-X-Get-Y Free (`promotion_free`)
+  - [x] Support Type 1: Buy-X-Get-Y Free (`promotion_free`)
   - [ ] Support Type 2: Buy-N-Get-Free (varian)
   - [x] Support Type 3: Quantity-based discount (`promotion_discount`)
   - [x] Hasil promo disimpan ke `kiosk_cart` dan diekspos kembali di cart list
@@ -351,10 +358,17 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 
 ### 7e. Voucher
 
-- [ ] `GET /api/voucher/:number` — Validate voucher
-  - Cek `voucher`: exists, status=0 (unused), not expired
-  - Return voucher amount
-- [ ] Voucher service: validate, markUsed
+- [x] `GET /api/voucher/:voucherCode` — Validate voucher (read-only)
+  - Cek `transaction_voucher`: exists, presence=1, status=0 (unused), not expired
+  - Return voucher snapshot + flag `valid`
+- [x] `POST /api/voucher/use` — Mark voucher used
+  - Update `transaction_voucher.status = 1`
+  - Insert snapshot ke `voucher_log`
+- [x] Submit voucher juga insert payment `VOUCHER` ke `kiosk_paid_pos`
+  - `paid = voucherGiftAmount`
+  - `approvedCode = voucherCode`
+  - `refCode = voucherCode`
+- [x] Voucher controller dibuat single-file tanpa service tambahan (`src/controllers/voucher.controller.js`)
 
 ### 7f. Payment Services & Schemas
 
@@ -365,6 +379,10 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [ ] Tax calculation helper: calculateTax(items, taxcodeConfig)
 
 ---
+
+
+
+
 
 ## 8. Transaction History — `/api/transaction/*`
 
@@ -478,9 +496,10 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 
 ## 15. Auto Number Generator
 
-- [~] Utility: generateAutoNumber(name) — generic auto-increment helper
-  - [x] Partial: sudah ada implementasi spesifik di service (`auto_number` id=200/220/302)
-  - [ ] Belum dijadikan helper generik reusable lintas modul
+- [x] Utility: generateAutoNumber(name) — generic auto-increment helper
+  - [x] Helper generik reusable dibuat di `src/utils/autoNumber.js`
+  - [x] Sudah dipakai untuk generate `voucherCode` di `transaction.service.js`
+  - [~] Implementasi lama spesifik per service (`auto_number` id=200/220/302) masih ada di beberapa modul lama dan belum semuanya dimigrasikan
   - Read current `runningNumber` dari `auto_number`
   - Increment + pad with `digit`
   - Prepend `prefix`

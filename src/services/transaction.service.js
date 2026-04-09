@@ -2,6 +2,7 @@ const pool = require('../config/database');
 const fs = require('fs/promises');
 const path = require('path');
 const Handlebars = require('handlebars');
+const { generateAutoNumber } = require('../utils/autoNumber');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', '..', 'public', 'template');
 
@@ -338,14 +339,16 @@ async function createTransaction({
     // 9. Save voucher reward snapshot for this transaction if promotion matched.
     if (voucherPromotion && Number(voucherPromotion.giftAmount || 0) > 0) {
       const voucherExpDate = formatMysqlDatetime(voucherPromotion.voucherExpDate);
+      const voucherCode = await generateAutoNumber('voucherCode', conn);
 
       await conn.query(
         `INSERT INTO transaction_voucher
-           (transactionId, voucherMinAmount, voucherAllowMultyple,
-            voucherGiftAmount, voucherExpDate, inputDate, inputBy)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+           (transactionId, voucherCode, voucherMinAmount, voucherAllowMultyple,
+            voucherGiftAmount, voucherExpDate, status, presence, inputDate, inputBy)
+         VALUES (?, ?, ?, ?, ?, ?, 0, 1, ?, ?)`,
         [
           transactionId,
+          voucherCode,
           Number(voucherPromotion.voucherMinAmount || 0),
           Number(voucherPromotion.voucherAllowMultyple || 0),
           Number(voucherPromotion.giftAmount || 0),

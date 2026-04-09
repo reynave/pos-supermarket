@@ -20,6 +20,8 @@ const manualCashRoutes = require('./routes/manual-cash.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const printRoutes = require('./routes/print.routes');
+const voucherRoutes = require('./routes/voucher.routes');
+const autoNumberRoutes = require('./routes/auto-number.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -60,6 +62,11 @@ app.use('/api/manual-cash', manualCashRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/print', printRoutes);
+app.use('/api/voucher', voucherRoutes);
+
+if (env.NODE_ENV !== 'production') {
+  app.use('/api/auto-number', autoNumberRoutes);
+}
 
 // --- 404 ---
 app.use((_req, res) => {
