@@ -187,6 +187,17 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 - [x] Item service: findByBarcode, findById, searchByDescription
 - [x] Item schema: Zod validation
 
+### 3.4 Items Master CRUD — `/api/items/*` (F2b)
+- [x] Controller baru khusus Items master dibuat terpisah dari flow scan/cart existing
+- [x] `GET /api/items/meta` — lookup item category, UOM, tax untuk form Items
+- [x] `GET /api/items?q=&page=&limit=` — search/list item by item id, description, short description, atau barcode
+- [x] `GET /api/items/:id` — detail item master + daftar multi-barcode dari `item_barcode`
+- [x] `POST /api/items` — create item master + insert barcode detail
+- [x] `PUT /api/items/:id` — update item master + sinkronisasi barcode detail
+- [x] `DELETE /api/items/:id` — soft delete item master + soft delete semua barcode detail
+- [x] Validasi konflik barcode lintas item aktif
+- [x] Frontend Items module terhubung ke API CRUD asli (`/items`, `/items/new`, `/items/:id`, `/items/:id/edit`)
+
 ### 3.1 Discount percent & Amount
 - [x] table header promotion ini global, 1st priority, type promo aktif: `promotion_item` dan `promotion_discount`
 - [x] promotion detail item discount sudah diterapkan via `promotion_item`
@@ -522,6 +533,14 @@ controller baru khusus print, print log, printer POS termal dan lain-lain
 
 ### 16.2 Printer termal POS
 [ ] code printer COM ke POS Printer termal
+
+
+### 17. Items CRUD 
+[ ] buatkan controller untuk view items, detail item, update ,edit, delete (presence = 0) 
+[ ] search items by barcode / id / name
+
+### 18. Promotion CRUD
+[ ] view table promotion
 
 
 ## Fitur Wajib Ditambah (Rekomendasi AI)

@@ -13,6 +13,7 @@ const errorHandler = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/auth.routes');
 const itemRoutes = require('./routes/item.routes');
+const itemsAdminRoutes = require('./routes/items-admin.routes');
 const cartRoutes = require('./routes/cart.routes');
 const shiftRoutes = require('./routes/shift.routes');
 const dailyCloseRoutes = require('./routes/daily-close.routes');
@@ -55,6 +56,7 @@ app.get('/api/health', async (_req, res) => {
 // --- API Routes ---
 app.use('/api/auth', authRoutes);
 app.use('/api/item', itemRoutes);
+app.use('/api/items', itemsAdminRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/shift', shiftRoutes);
 app.use('/api/daily-close', dailyCloseRoutes);
