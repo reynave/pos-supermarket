@@ -22,6 +22,7 @@ const transactionRoutes = require('./routes/transaction.routes');
 const paymentRoutes = require('./routes/payment.routes');
 const printRoutes = require('./routes/print.routes');
 const voucherRoutes = require('./routes/voucher.routes');
+const promotionRoutes = require('./routes/promotion.routes');
 const autoNumberRoutes = require('./routes/auto-number.routes');
 
 const app = express();
@@ -65,6 +66,7 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/print', printRoutes);
 app.use('/api/voucher', voucherRoutes);
+app.use('/api/promotion', promotionRoutes);
 
 if (env.NODE_ENV !== 'production') {
   app.use('/api/auto-number', autoNumberRoutes);

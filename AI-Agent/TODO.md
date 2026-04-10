@@ -3,7 +3,7 @@
 > Backend only (`pos-supermarket/`). Tidak termasuk Angular frontend.
 > Referensi lengkap: [AGENT.md](./AGENT.md) | Database terbaru: [table-ver2026.sql](./table-ver2026.sql)
 
-## Update Snapshot (2026-04-08)
+## Update Snapshot (2026-04-10)
 
 - Cart core sudah berjalan dengan naming endpoint baru: `POST /api/cart/new`, `GET /api/cart/list/:kioskUuid`, `POST /api/cart/void/:kioskUuid`, `POST /api/cart/voidItem/:kioskUuid`.
 - Scan/add item berjalan di namespace item: `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`.
@@ -17,6 +17,9 @@
 - Auto number helper generik sudah tersedia di `src/utils/autoNumber.js` dan sudah dipakai untuk generate `voucherCode`.
 - API voucher sudah aktif: validasi read-only `GET /api/voucher/:voucherCode` dan submit `POST /api/voucher/use`.
 - Submit voucher sukses sekarang juga insert payment type `VOUCHER` ke `kiosk_paid_pos` dengan `approvedCode = voucherCode`.
+- Promotion master CRUD API sudah aktif di namespace baru `/api/promotion` (header + detail `promotion_free` + detail `promotion_item`).
+- Endpoint list/detail promotion sudah diperbaiki agar payload data tidak kosong (fix mysql2 result destructuring `[rows]`).
+- Default list promotion mengembalikan semua data aktif (`presence = 1`) saat query kosong, serta support search `code` dan `description`.
 
 ---
 
@@ -540,7 +543,11 @@ controller baru khusus print, print log, printer POS termal dan lain-lain
 [ ] search items by barcode / id / name
 
 ### 18. Promotion CRUD
-[ ] view table promotion
+[x] backend endpoint list/view table promotion aktif: `GET /api/promotion`
+[x] detail promotion header aktif: `GET /api/promotion/:id`
+[x] create/update/delete promotion header aktif: `POST /api/promotion`, `PUT /api/promotion/:id`, `DELETE /api/promotion/:id`
+[x] detail `promotion_free` CRUD aktif: `GET/POST /api/promotion/:promotionId/free`, `PUT/DELETE /api/promotion/free/:id`
+[x] detail `promotion_item` CRUD aktif: `GET/POST /api/promotion/:promotionId/item`, `PUT/DELETE /api/promotion/item/:id`
 
 
 ## Fitur Wajib Ditambah (Rekomendasi AI)
