@@ -5,6 +5,7 @@
 
 ## Update Snapshot (2026-04-10)
 
+- BCA LAN route manual versi user aktif di `src/routes/payment-bca-lan.routes.js`; endpoint runtime yang dipakai saat ini adalah `POST /api/payment/bca-lan/payment` dan `GET /api/payment/bca-lan/echoTest`, dan jangan direfactor lagi tanpa verifikasi langsung ke mesin EDC.
 - Cart core sudah berjalan dengan naming endpoint baru: `POST /api/cart/new`, `GET /api/cart/list/:kioskUuid`, `POST /api/cart/void/:kioskUuid`, `POST /api/cart/voidItem/:kioskUuid`.
 - Scan/add item berjalan di namespace item: `POST /api/item/barcode`, `POST /api/item/add`, `POST /api/item/add-qty`.
 - Daily close dedicated endpoint aktif: `GET/POST /api/daily-close/:resetId` dan report/history.
@@ -356,6 +357,11 @@ Tujuan sprint ini: memastikan alur inti kasir stabil, aman, dan siap operasional
 
 ### 7c. EDC Integration
 
+- [~] BCA LAN socket route aktif di `src/routes/payment-bca-lan.routes.js`
+  - [x] `POST /api/payment/bca-lan/payment` — payment request via TCP LAN socket
+  - [x] `GET /api/payment/bca-lan/echoTest` — echo test ke EDC via LAN socket
+  - [x] Logging request/response ke file log sudah aktif
+  - [x] Versi route saat ini mengikuti implementasi manual user dan dibekukan dulu
 - [ ] `POST /api/payment/edc/send` — Send command to EDC device (serial port)
   - BCA ECR hex protocol
   - Log ke `payment_bca_ecr`

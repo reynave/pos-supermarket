@@ -5,7 +5,25 @@ const pool = require('../config/database');
  */
 async function getPaymentTypes() {
   const [rows] = await pool.query(
-    `SELECT id, label, name, image, edc, isLock
+    `SELECT id,
+            openCashDrawer,
+            edc,
+            label,
+            name,
+            connectionType,
+            com,
+            ip,
+            port,
+            apikey,
+            mId,
+            nmId,
+            merchant,
+            timeout,
+            image,
+            apiUrl,
+            apiUrlStatus,
+            isLock,
+            status
      FROM payment_type
      WHERE status = 1 AND presence = 1
      ORDER BY name ASC`,

@@ -1,12 +1,12 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
+
 const express = require('express');
 const http = require('http');
-const path = require('path');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
-
-const env = require('./config/env');
 const { initSocket } = require('./config/socket');
 const pool = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
@@ -20,6 +20,7 @@ const dailyCloseRoutes = require('./routes/daily-close.routes');
 const manualCashRoutes = require('./routes/manual-cash.routes');
 const transactionRoutes = require('./routes/transaction.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const paymentBcaLanRoutes = require('./routes/payment-bca-lan.routes');
 const printRoutes = require('./routes/print.routes');
 const voucherRoutes = require('./routes/voucher.routes');
 const promotionRoutes = require('./routes/promotion.routes');
@@ -64,11 +65,12 @@ app.use('/api/daily-close', dailyCloseRoutes);
 app.use('/api/manual-cash', manualCashRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/payment/bca-lan', paymentBcaLanRoutes);
 app.use('/api/print', printRoutes);
 app.use('/api/voucher', voucherRoutes);
 app.use('/api/promotion', promotionRoutes);
 
-if (env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production') {
   app.use('/api/auto-number', autoNumberRoutes);
 }
 
@@ -81,9 +83,9 @@ app.use((_req, res) => {
 app.use(errorHandler);
 
 // --- Start server ---
-server.listen(env.PORT, () => {
-  console.log(`[Server] POS Supermarket API running on http://localhost:${env.PORT}`);
-  console.log(`[Server] Environment: ${env.NODE_ENV}`);
+server.listen(process.env.PORT || 3000, () => {
+  console.log(`[Server] POS Supermarket API running on http://localhost:${process.env.PORT || 3000}`);
+  console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = { app, server };
