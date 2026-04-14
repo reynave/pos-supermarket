@@ -1,6 +1,8 @@
 const utils = require('./utils');
 const { addLogs, respLogs } = require('./logs');
 const dummyCC = process.env.DUMMYCC; 
+const dccNumber = process.env.DCC;
+const dccExp = process.env.DEXPCC;
 
 let STX = "\x02";
 let ETX = "\x03";
@@ -40,8 +42,8 @@ function bcaXor(body = []) {
         /**
          * BCA Dummy CC;
          */
-        PAN = "4556330000000191"+"   ";
-        expireDate = "2803";
+        PAN = dccNumber + "   ";
+        expireDate = dccExp;
     }
 
 

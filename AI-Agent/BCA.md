@@ -36,3 +36,28 @@ example body:
 /api/payment/bca-lan/echo-test?ip=192.168.1.10&port=80&timeoutMs=60000
  
 ```
+
+
+### ERROR HOST
+Untuk masalah ini Mungkin boleh dilakukan step berikut pak ?
+1. Function 99 
+2. Input Pasword 999999
+3. Pilih CLEAR JURNAL
+4. Pada "Acquirer List" pilih LOYALTY
+
+### loading COOM connection please wait
+1. F96 password 3636
+
+### SETTING WIFI 
+1. F105 pass 3636
+
+## DUMMY CC
+VISA
+4556330081413263 
+Expiry (YY/MM): 29/12
+ 
+Mastercard
+PAN: 5432480012730454
+Expiry (YY/MM): 30/03
+
+last chat 2025-04-14
