@@ -39,7 +39,7 @@ async function generateAutoNumber(name, conn = null) {
     const nextNumber = Number(runningNumber) + 1;
 
     await connection.query(
-      'UPDATE auto_number SET runningNumber = ?, updateDate = UNIX_TIMESTAMP() WHERE id = ?',
+      'UPDATE auto_number SET runningNumber = ?, updateDate = NOW() WHERE id = ?',
       [nextNumber, id],
     );
 

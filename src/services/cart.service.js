@@ -11,7 +11,7 @@ async function generateKioskUuid(terminalId) {
 
   // Atomically increment runningNumber and get the new value
   await pool.query(
-    `UPDATE auto_number SET runningNumber = runningNumber + 1, updateDate = UNIX_TIMESTAMP() WHERE id = ?`,
+    `UPDATE auto_number SET runningNumber = runningNumber + 1, updateDate = NOW() WHERE id = ?`,
     [autoNumberId]
   );
 

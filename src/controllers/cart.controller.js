@@ -10,7 +10,10 @@ const { success, error } = require('../utils/response');
 async function createCart(req, res, next) {
   try {
     const { cashierId, terminalId, storeOutletId } = req.body;
-
+    console.log(`[Create Cart] cashierId=${cashierId}, terminalId=${terminalId}, storeOutletId=${storeOutletId}`);
+    if (!cashierId || !terminalId) {
+      return error(res, 'cashierId and terminalId are required', 400);
+    }
     // Generate new kioskUuid
     const kioskUuid = await cartService.generateKioskUuid(terminalId);
 

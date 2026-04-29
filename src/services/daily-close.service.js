@@ -268,7 +268,7 @@ async function closeDaily({ resetId, userIdClose, terminalId, note, cashDeclarat
 
     await connection.query(
       `INSERT INTO reset_payment (resetId, paymentTypeId, qty, paidAmount, presence, inputDate)
-       SELECT ?, tp.paymentTypeId, COUNT(*) AS qty, IFNULL(SUM(tp.amount), 0) AS paidAmount, 1, UNIX_TIMESTAMP()
+       SELECT ?, tp.paymentTypeId, COUNT(*) AS qty, IFNULL(SUM(tp.amount), 0) AS paidAmount, 1, NOW()
        FROM transaction_payment tp
        JOIN transaction t ON t.id = tp.transactionId
        WHERE t.resetId = ?

@@ -119,7 +119,7 @@ async function generateTransactionId(cashierId, conn) {
   const nextNumber = runningNumber + 1;
 
   await conn.query(
-    'UPDATE auto_number SET runningNumber = ?, updateDate = UNIX_TIMESTAMP() WHERE id = ?',
+    'UPDATE auto_number SET runningNumber = ?, updateDate = NOW() WHERE id = ?',
     [nextNumber, autoNumberId],
   );
 
